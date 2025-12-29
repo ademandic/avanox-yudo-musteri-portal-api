@@ -13,8 +13,9 @@ class ValidatePortalApiKey
     {
         $apiKey = $request->header('X-Portal-Api-Key');
 
-        // API Key kontrolü
-        if (!$apiKey || $apiKey !== config('portal.api_key')) {
+        // API Key kontrolü (timing-safe comparison)
+        $configApiKey = config('portal.api_key');
+        if (!$apiKey || !$configApiKey || !hash_equals($configApiKey, $apiKey)) {
             Log::warning('Portal API: Invalid API key attempt', [
                 'ip' => $request->ip(),
                 'endpoint' => $request->path()

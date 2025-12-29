@@ -64,11 +64,32 @@ class FileStorageService
     }
 
     /**
-     * Dosyanın tam yolunu döndür
+     * Dosyanın tam yolunu döndür (path traversal korumalı)
      */
     public function getFullPath(string $relativePath): string
     {
-        return "{$this->basePath}/{$relativePath}";
+        // Path traversal koruması
+        $fullPath = realpath($this->basePath . '/' . $relativePath);
+        $basePath = realpath($this->basePath);
+
+        // Eğer dosya yoksa veya base path dışındaysa hata fırlat
+        if ($fullPath === false) {
+            // Dosya henüz mevcut değilse, güvenli path oluştur
+            $safePath = $this->basePath . '/' . ltrim($relativePath, '/');
+            $normalizedPath = preg_replace('/\.\.\/|\.\.\\\\/', '', $safePath);
+
+            if (strpos($normalizedPath, $this->basePath) !== 0) {
+                throw new \InvalidArgumentException('Geçersiz dosya yolu');
+            }
+
+            return $normalizedPath;
+        }
+
+        if (strpos($fullPath, $basePath) !== 0) {
+            throw new \InvalidArgumentException('Geçersiz dosya yolu');
+        }
+
+        return $fullPath;
     }
 
     /**
