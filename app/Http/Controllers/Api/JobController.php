@@ -22,8 +22,8 @@ class JobController extends Controller
 
         $query = Job::with(['technicalData', 'portalRequest.currentState'])
             ->forCompany($user->company_id)
-            ->active()
-            ->orderBy('created_at', 'desc');
+            ->orderBy('created_at', 'desc')
+            ->limit(20);
 
         // Arama filtresi
         if ($request->has('search')) {
@@ -72,7 +72,6 @@ class JobController extends Controller
         ])
             ->forCompany($user->company_id)
             ->where('job_no', $jobNo)
-            ->active()
             ->first();
 
         if (!$job) {

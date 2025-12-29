@@ -106,9 +106,14 @@ class Job extends Model
 
     /**
      * Scope: Belirli bir firmaya ait işler
+     * mold_maker, final_customer veya molder_t1 olabilir
      */
     public function scopeForCompany($query, int $companyId)
     {
-        return $query->where('mold_maker_id', $companyId);
+        return $query->where(function ($q) use ($companyId) {
+            $q->where('mold_maker_id', $companyId)
+              ->orWhere('final_customer_id', $companyId)
+              ->orWhere('molder_t1_id', $companyId);
+        });
     }
 }
