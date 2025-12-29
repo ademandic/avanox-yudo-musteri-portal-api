@@ -1,0 +1,78 @@
+#==============================================================================
+# Portal API - Docker Ignore
+#==============================================================================
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE & Editors
+.idea
+.vscode
+*.sublime-*
+*.swp
+*.swo
+*~
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Tests
+tests/
+phpunit.xml
+.phpunit.result.cache
+
+# Development files
+.env
+.env.*
+!.env.example
+
+# Dependencies (will be installed in container)
+/vendor/
+/node_modules/
+
+# Build artifacts
+/public/hot
+/public/storage
+/storage/*.key
+
+# Logs
+*.log
+storage/logs/*
+!storage/logs/.gitkeep
+
+# Cache
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+bootstrap/cache/*
+!storage/framework/cache/.gitkeep
+!storage/framework/sessions/.gitkeep
+!storage/framework/views/.gitkeep
+!bootstrap/cache/.gitkeep
+
+# Docker
+docker-compose.override.yml
+.docker/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+Jenkinsfile
+
+# Testing & Coverage
+.coverage
+coverage/
+.phpunit.cache
+
+# Temporary files
+*.tmp
+*.temp
