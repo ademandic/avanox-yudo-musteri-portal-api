@@ -125,8 +125,8 @@ ENV APP_DEBUG=true
 # Install dev dependencies
 RUN composer install --prefer-dist
 
-# Install Xdebug for development
-RUN pecl install xdebug \
+# Install Xdebug for development (3.4+ required for PHP 8.4)
+RUN pecl install xdebug-3.4.0 \
     && docker-php-ext-enable xdebug
 
 # Override PHP config for development
