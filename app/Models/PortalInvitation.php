@@ -38,6 +38,7 @@ class PortalInvitation extends Model
         'expires_at' => 'datetime',
         'accepted_at' => 'datetime',
         'is_active' => 'boolean',
+        'status' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
