@@ -97,12 +97,8 @@ RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html/storage \
     && chmod -R 755 /var/www/html/bootstrap/cache
 
-#------------------------------------------------------------------------------
-# Production Optimizations
-#------------------------------------------------------------------------------
-RUN php artisan config:cache \
-    && php artisan route:cache \
-    && php artisan view:cache
+# Note: config:cache, route:cache, view:cache should be run after container start
+# when .env file is available. Do not cache during build.
 
 # Expose port
 EXPOSE 9000
