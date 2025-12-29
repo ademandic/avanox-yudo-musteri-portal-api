@@ -1,9 +1,9 @@
 #==============================================================================
 # Portal API - Production Dockerfile
-# PHP 8.2 FPM + SQL Server Support
+# PHP 8.4 FPM + SQL Server Support
 #==============================================================================
 
-FROM php:8.2-fpm-alpine AS base
+FROM php:8.4-fpm-alpine AS base
 
 # Metadata
 LABEL maintainer="Portal API Team"
