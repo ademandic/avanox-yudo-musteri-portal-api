@@ -35,7 +35,7 @@ class RequestController extends Controller
     {
         $user = Auth::guard('api')->user();
 
-        $requests = PortalRequest::with(['job', 'currentState'])
+        $requests = PortalRequest::with(['job', 'currentState', 'portalUser.contact'])
             ->forCompany($user->company_id)
             ->active()
             ->orderBy('created_at', 'desc')
@@ -145,7 +145,7 @@ class RequestController extends Controller
     {
         $user = Auth::guard('api')->user();
 
-        $portalRequest = PortalRequest::with(['job.technicalData', 'job.files', 'currentState', 'stateLogs.state'])
+        $portalRequest = PortalRequest::with(['job.technicalData', 'job.files', 'currentState', 'stateLogs.state', 'portalUser.contact'])
             ->forCompany($user->company_id)
             ->active()
             ->find($id);

@@ -40,6 +40,14 @@ class RequestResource extends JsonResource
             'is_editable' => $this->isEditable(),
             'is_cancellable' => $this->isCancellable(),
 
+            // Oluşturan kullanıcı
+            'created_by' => $this->whenLoaded('portalUser', function () {
+                return [
+                    'id' => $this->portalUser->id,
+                    'name' => $this->portalUser->contact?->full_name ?? $this->portalUser->email,
+                ];
+            }),
+
             // Job bilgileri
             'job' => $this->whenLoaded('job', function () {
                 return [
