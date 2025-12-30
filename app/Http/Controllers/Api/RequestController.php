@@ -14,6 +14,7 @@ use App\Models\PortalRequest;
 use App\Models\PortalRequestState;
 use App\Models\PortalRequestStateLog;
 use App\Models\TechnicalData;
+use App\Services\FileStorageService;
 use App\Services\JobNumberService;
 use App\Services\RequestNumberService;
 use Illuminate\Http\JsonResponse;
@@ -24,7 +25,8 @@ class RequestController extends Controller
 {
     public function __construct(
         protected JobNumberService $jobNumberService,
-        protected RequestNumberService $requestNumberService
+        protected RequestNumberService $requestNumberService,
+        protected FileStorageService $fileStorageService
     ) {}
 
     /**
@@ -58,8 +60,9 @@ class RequestController extends Controller
         try {
             $result = DB::transaction(function () use ($request, $user) {
                 // 1. Job oluştur
+                $jobNo = $this->jobNumberService->generate();
                 $job = Job::create([
-                    'job_no' => $this->jobNumberService->generate(),
+                    'job_no' => $jobNo,
                     'job_category_id' => 1, // System Sales
                     'mold_maker_id' => $user->company_id,
                     'mold_maker_contact_id' => $user->contact_id,
@@ -70,7 +73,7 @@ class RequestController extends Controller
                 ]);
 
                 // 2. Technical Data oluştur
-                TechnicalData::create([
+                $technicalData = TechnicalData::create([
                     'job_id' => $job->id,
                     'teknik_data_tipi' => 0, // Sıcak Yolluk Sistem Satışı
                     'parca_agirligi' => $request->parca_agirligi,
@@ -110,7 +113,31 @@ class RequestController extends Controller
                     'aciklama' => "Portal üzerinden oluşturuldu. Talep No: {$portalRequest->request_no}",
                 ]);
 
-                // 4. İlk durum logu ekle
+                // 4. Dosyalar varsa yükle
+                if ($request->hasFile('files')) {
+                    foreach ($request->file('files') as $file) {
+                        $fileInfo = $this->fileStorageService->store(
+                            $file,
+                            $jobNo,
+                            $technicalData->id
+                        );
+
+                        ErpFile::create([
+                            'job_id' => $job->id,
+                            'baglanti_id' => $technicalData->id,
+                            'baglanti_tablo_adi' => 'technical_datas',
+                            'dosya_adi' => $fileInfo['original_name'],
+                            'dosya_yolu' => $fileInfo['relative_path'],
+                            'extension' => $fileInfo['extension'],
+                            'dosya_boyut' => $fileInfo['size'],
+                            'aciklama' => "Portal - Talep No: {$portalRequest->request_no}",
+                            'user_id' => null, // Portal user, ERP user değil
+                            'is_active' => 1,
+                        ]);
+                    }
+                }
+
+                // 5. İlk durum logu ekle
                 PortalRequestStateLog::create([
                     'portal_request_id' => $portalRequest->id,
                     'portal_request_state_id' => PortalRequestState::STATE_RECEIVED,
@@ -125,7 +152,7 @@ class RequestController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Talep başarıyla oluşturuldu.',
-                'data' => new RequestResource($result->load(['job', 'currentState'])),
+                'data' => new RequestResource($result->load(['job.files', 'currentState'])),
             ], 201);
 
         } catch (\Exception $e) {

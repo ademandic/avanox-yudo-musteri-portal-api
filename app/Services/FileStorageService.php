@@ -7,57 +7,93 @@ use App\Models\Job;
 use App\Models\PortalUser;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Str;
 
 /**
  * File Storage Service
  * Dosya yükleme ve yönetim işlemleri.
+ *
+ * Klasör yapısı: {base_path}/{yıl}/{ay}/{job_no}/{subfolder}/{technical_data_id}/
+ * Örnek: /mnt/yudo_data/2025/01/YT25-1001/drawing_log/12345/kalip-cizim.pdf
  */
 class FileStorageService
 {
     protected string $basePath;
+    protected string $subfolder;
     protected array $allowedExtensions;
     protected int $maxSize;
 
     public function __construct()
     {
         $config = config('portal.upload');
-        $this->basePath = $config['storage_path'];
+        $this->basePath = $config['base_path'];
+        $this->subfolder = $config['subfolder'];
         $this->allowedExtensions = $config['allowed_extensions'];
         $this->maxSize = $config['max_size'];
     }
 
     /**
-     * Dosyayı güvenli şekilde kaydet
+     * Dosya yükleme path'i oluştur
+     * Format: {base}/{yıl}/{ay}/{job_no}/drawing_log/{technical_data_id}/
      */
-    public function store(UploadedFile $file): array
+    public function buildPath(string $jobNo, int $technicalDataId): string
+    {
+        $year = date('Y');
+        $month = date('m'); // 01, 02, ... 12
+
+        $path = sprintf(
+            '%s/%s/%s/%s/%s/%d',
+            $this->basePath,
+            $year,
+            $month,
+            $jobNo,
+            $this->subfolder,
+            $technicalDataId
+        );
+
+        // Klasör yoksa oluştur
+        if (!File::isDirectory($path)) {
+            File::makeDirectory($path, 0755, true);
+        }
+
+        return $path;
+    }
+
+    /**
+     * Dosya kaydet - Yeni yapı (job_no + technical_data_id ile)
+     */
+    public function store(UploadedFile $file, string $jobNo, int $technicalDataId): array
     {
         $this->validateFile($file);
 
-        $year = date('Y');
-        $month = date('m');
-        $uuid = Str::uuid();
-        $extension = strtolower($file->getClientOriginalExtension());
+        $path = $this->buildPath($jobNo, $technicalDataId);
 
-        // Güvenli dosya adı
-        $safeFileName = $uuid . '.' . $extension;
-        $relativePath = "{$year}/{$month}";
-        $fullDirectory = "{$this->basePath}/{$relativePath}";
-        $fullPath = "{$fullDirectory}/{$safeFileName}";
+        // Orijinal dosya adını koru (güvenli hale getir)
+        $originalName = $file->getClientOriginalName();
+        $safeName = $this->sanitizeFileName($originalName);
 
-        // Klasör yoksa oluştur
-        if (!File::isDirectory($fullDirectory)) {
-            File::makeDirectory($fullDirectory, 0755, true);
-        }
+        // Aynı isimde dosya varsa numara ekle
+        $finalName = $this->getUniqueFileName($path, $safeName);
 
         // Dosyayı kaydet
-        $file->move($fullDirectory, $safeFileName);
+        $file->move($path, $finalName);
+
+        // Relative path (DB'ye kaydedilecek)
+        $relativePath = sprintf(
+            '%s/%s/%s/%s/%d/%s',
+            date('Y'),
+            date('m'),
+            $jobNo,
+            $this->subfolder,
+            $technicalDataId,
+            $finalName
+        );
 
         return [
-            'original_name' => $file->getClientOriginalName(),
-            'storage_path' => "{$relativePath}/{$safeFileName}",
-            'full_path' => $fullPath,
-            'extension' => $extension,
+            'original_name' => $originalName,
+            'saved_name' => $finalName,
+            'relative_path' => $relativePath,
+            'full_path' => $path . '/' . $finalName,
+            'extension' => strtolower($file->getClientOriginalExtension()),
             'mime_type' => $file->getMimeType(),
             'size' => $file->getSize(),
         ];
@@ -97,7 +133,11 @@ class FileStorageService
      */
     public function exists(string $relativePath): bool
     {
-        return File::exists($this->getFullPath($relativePath));
+        try {
+            return File::exists($this->getFullPath($relativePath));
+        } catch (\InvalidArgumentException $e) {
+            return false;
+        }
     }
 
     /**
@@ -105,10 +145,14 @@ class FileStorageService
      */
     public function delete(string $relativePath): bool
     {
-        $fullPath = $this->getFullPath($relativePath);
+        try {
+            $fullPath = $this->getFullPath($relativePath);
 
-        if (File::exists($fullPath)) {
-            return File::delete($fullPath);
+            if (File::exists($fullPath)) {
+                return File::delete($fullPath);
+            }
+        } catch (\InvalidArgumentException $e) {
+            return false;
         }
 
         return false;
@@ -152,23 +196,45 @@ class FileStorageService
     }
 
     /**
-     * MIME type kontrolü
+     * Dosya adını güvenli hale getir
      */
-    public function isAllowedMimeType(string $mimeType): bool
+    protected function sanitizeFileName(string $name): string
     {
-        $allowedMimes = [
-            'application/pdf',
-            'image/jpeg',
-            'image/png',
-            'image/gif',
-            'application/postscript', // AI files
-            'image/vnd.adobe.photoshop', // PSD
-            'application/zip',
-            'application/x-rar-compressed',
-            'application/octet-stream', // CAD files
-        ];
+        // Türkçe karakterleri değiştir
+        $name = str_replace(
+            ['ı', 'ğ', 'ü', 'ş', 'ö', 'ç', 'İ', 'Ğ', 'Ü', 'Ş', 'Ö', 'Ç', ' '],
+            ['i', 'g', 'u', 's', 'o', 'c', 'I', 'G', 'U', 'S', 'O', 'C', '_'],
+            $name
+        );
 
-        return in_array($mimeType, $allowedMimes);
+        // Sadece alfanumerik, tire, alt çizgi ve nokta
+        $name = preg_replace('/[^a-zA-Z0-9\-_\.]/', '_', $name);
+
+        // Çoklu alt çizgileri teke indir
+        $name = preg_replace('/_+/', '_', $name);
+
+        return $name;
+    }
+
+    /**
+     * Benzersiz dosya adı oluştur
+     */
+    protected function getUniqueFileName(string $path, string $name): string
+    {
+        if (!File::exists($path . '/' . $name)) {
+            return $name;
+        }
+
+        $info = pathinfo($name);
+        $base = $info['filename'];
+        $ext = $info['extension'] ?? '';
+
+        $counter = 1;
+        while (File::exists($path . '/' . $base . '_' . $counter . '.' . $ext)) {
+            $counter++;
+        }
+
+        return $base . '_' . $counter . '.' . $ext;
     }
 
     /**

@@ -20,15 +20,18 @@ return [
     |--------------------------------------------------------------------------
     | Dosya Yükleme Ayarları (NFS Mount)
     |--------------------------------------------------------------------------
+    | Klasör yapısı: {base_path}/{yıl}/{ay}/{job_no}/{subfolder}/{technical_data_id}/
+    | Örnek: /mnt/yudo_data/2025/01/YT25-1001/drawing_log/12345/kalip-cizim.pdf
     */
     'upload' => [
-        'max_size' => env('PORTAL_UPLOAD_MAX_SIZE', 52428800), // 50MB
+        'max_size' => env('FILE_UPLOAD_MAX_SIZE', 52428800), // 50MB
         'allowed_extensions' => [
             'pdf', 'jpg', 'jpeg', 'png',
             'dwg', 'step', 'stp', 'iges', 'igs', 'x_t',
             'ai', 'psd', 'zip', 'rar'
         ],
-        'storage_path' => env('PORTAL_STORAGE_PATH', storage_path('app/portal-files')),
+        'base_path' => env('FILE_STORAGE_PATH', '/mnt/yudo_data'),
+        'subfolder' => env('FILE_STORAGE_SUBFOLDER', 'drawing_log'),
     ],
 
     /*

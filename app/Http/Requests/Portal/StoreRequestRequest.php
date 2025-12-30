@@ -47,6 +47,14 @@ class StoreRequestRequest extends FormRequest
             'goz_sayisi' => ['required', 'integer', 'min:1', 'max:256'],
             'meme_sayisi' => ['required', 'integer', 'min:1', 'max:256'],
             'meme_tipi' => ['required', 'string', 'in:' . $nozzleTypes],
+
+            // Dosya yükleme
+            'files' => ['nullable', 'array', 'max:10'],
+            'files.*' => [
+                'file',
+                'max:51200', // 50MB
+                'mimes:pdf,jpg,jpeg,png,dwg,step,stp,iges,igs,x_t,ai,psd,zip,rar',
+            ],
         ];
     }
 
@@ -88,6 +96,12 @@ class StoreRequestRequest extends FormRequest
             'meme_tipi.in' => 'Geçersiz meme tipi.',
 
             'expected_delivery_date.after' => 'Beklenen teslim tarihi bugünden sonra olmalıdır.',
+
+            'files.array' => 'Dosyalar dizi formatında olmalıdır.',
+            'files.max' => 'Tek seferde en fazla 10 dosya yüklenebilir.',
+            'files.*.file' => 'Geçerli bir dosya seçilmelidir.',
+            'files.*.max' => 'Dosya boyutu maksimum 50 MB olabilir.',
+            'files.*.mimes' => 'İzin verilen formatlar: PDF, JPG, PNG, DWG, STEP, IGES, X_T, AI, PSD, ZIP, RAR',
         ];
     }
 
@@ -114,6 +128,8 @@ class StoreRequestRequest extends FormRequest
             'goz_sayisi' => 'Göz Sayısı',
             'meme_sayisi' => 'Meme Sayısı',
             'meme_tipi' => 'Meme Tipi',
+            'files' => 'Dosyalar',
+            'files.*' => 'Dosya',
         ];
     }
 }
