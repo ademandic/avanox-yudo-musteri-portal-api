@@ -25,7 +25,6 @@ services:
       - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-admin@yudo.com.tr}"
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
     ports:
-      - "80:80"
       - "443:443"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
