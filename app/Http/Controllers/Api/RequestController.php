@@ -55,6 +55,26 @@ class RequestController extends Controller
      */
     public function store(StoreRequestRequest $request): JsonResponse
     {
+        \Log::info('[DEBUG] API RequestController::store başladı', [
+            'has_files' => $request->hasFile('files'),
+            'files_count' => $request->hasFile('files') ? count($request->file('files')) : 0,
+            'all_input' => $request->except(['files']),
+            'content_type' => $request->header('Content-Type'),
+        ]);
+
+        if ($request->hasFile('files')) {
+            foreach ($request->file('files') as $index => $file) {
+                \Log::info('[DEBUG] API - Alınan dosya', [
+                    'index' => $index,
+                    'name' => $file->getClientOriginalName(),
+                    'size' => $file->getSize(),
+                    'mime' => $file->getMimeType(),
+                    'valid' => $file->isValid(),
+                    'error' => $file->getError(),
+                ]);
+            }
+        }
+
         $user = Auth::guard('api')->user();
 
         try {
@@ -115,14 +135,29 @@ class RequestController extends Controller
 
                 // 4. Dosyalar varsa yükle
                 if ($request->hasFile('files')) {
-                    foreach ($request->file('files') as $file) {
+                    \Log::info('[DEBUG] API - Dosya yükleme başlıyor', [
+                        'files_count' => count($request->file('files')),
+                        'job_no' => $jobNo,
+                        'technical_data_id' => $technicalData->id,
+                    ]);
+
+                    foreach ($request->file('files') as $index => $file) {
+                        \Log::info('[DEBUG] API - Dosya işleniyor', [
+                            'index' => $index,
+                            'name' => $file->getClientOriginalName(),
+                        ]);
+
                         $fileInfo = $this->fileStorageService->store(
                             $file,
                             $jobNo,
                             $technicalData->id
                         );
 
-                        ErpFile::create([
+                        \Log::info('[DEBUG] API - Dosya kaydedildi', [
+                            'fileInfo' => $fileInfo,
+                        ]);
+
+                        $erpFile = ErpFile::create([
                             'job_id' => $job->id,
                             'baglanti_id' => $technicalData->id,
                             'baglanti_tablo_adi' => 'technical_datas',
@@ -134,7 +169,13 @@ class RequestController extends Controller
                             'user_id' => null, // Portal user, ERP user değil
                             'is_active' => 1,
                         ]);
+
+                        \Log::info('[DEBUG] API - ErpFile kaydı oluşturuldu', [
+                            'erpFile_id' => $erpFile->id,
+                        ]);
                     }
+                } else {
+                    \Log::info('[DEBUG] API - Dosya yok, atlanıyor');
                 }
 
                 // 5. İlk durum logu ekle
