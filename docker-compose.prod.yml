@@ -6,41 +6,6 @@
 
 services:
   #----------------------------------------------------------------------------
-  # Traefik Reverse Proxy (SSL Termination with Let's Encrypt)
-  #----------------------------------------------------------------------------
-  traefik:
-    image: traefik:v3.2
-    container_name: portal-api-traefik
-    restart: always
-    command:
-      - "--api.dashboard=false"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--providers.docker.network=portal-network"
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
-      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
-      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
-      - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
-      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-admin@yudo.com.tr}"
-      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
-    ports:
-      - "443:443"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - letsencrypt-data:/letsencrypt
-    networks:
-      - portal-network
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 128M
-        reservations:
-          cpus: '0.1'
-          memory: 32M
-
-  #----------------------------------------------------------------------------
   # PHP-FPM Application (Production)
   #----------------------------------------------------------------------------
   app:
@@ -65,21 +30,16 @@ services:
           memory: 256M
 
   #----------------------------------------------------------------------------
-  # Nginx Web Server (Production) - Behind Traefik
+  # Nginx Web Server (Production)
   #----------------------------------------------------------------------------
   nginx:
     restart: always
-    ports: []  # Remove direct port exposure, Traefik handles it
+    ports:
+      - "80:80"
     volumes:
       - ./public:/var/www/html/public:ro
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.portal-api.rule=Host(`${API_DOMAIN:-api.yudo.com.tr}`)"
-      - "traefik.http.routers.portal-api.entrypoints=websecure"
-      - "traefik.http.routers.portal-api.tls.certresolver=letsencrypt"
-      - "traefik.http.services.portal-api.loadbalancer.server.port=80"
     deploy:
       resources:
         limits:
@@ -155,6 +115,4 @@ services:
 #------------------------------------------------------------------------------
 volumes:
   portal-files:
-    driver: local
-  letsencrypt-data:
     driver: local
