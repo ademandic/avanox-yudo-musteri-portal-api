@@ -55,26 +55,6 @@ class RequestController extends Controller
      */
     public function store(StoreRequestRequest $request): JsonResponse
     {
-        \Log::info('[DEBUG] API RequestController::store başladı', [
-            'has_files' => $request->hasFile('files'),
-            'files_count' => $request->hasFile('files') ? count($request->file('files')) : 0,
-            'all_input' => $request->except(['files']),
-            'content_type' => $request->header('Content-Type'),
-        ]);
-
-        if ($request->hasFile('files')) {
-            foreach ($request->file('files') as $index => $file) {
-                \Log::info('[DEBUG] API - Alınan dosya', [
-                    'index' => $index,
-                    'name' => $file->getClientOriginalName(),
-                    'size' => $file->getSize(),
-                    'mime' => $file->getMimeType(),
-                    'valid' => $file->isValid(),
-                    'error' => $file->getError(),
-                ]);
-            }
-        }
-
         $user = Auth::guard('api')->user();
 
         try {
@@ -135,29 +115,14 @@ class RequestController extends Controller
 
                 // 4. Dosyalar varsa yükle
                 if ($request->hasFile('files')) {
-                    \Log::info('[DEBUG] API - Dosya yükleme başlıyor', [
-                        'files_count' => count($request->file('files')),
-                        'job_no' => $jobNo,
-                        'technical_data_id' => $technicalData->id,
-                    ]);
-
-                    foreach ($request->file('files') as $index => $file) {
-                        \Log::info('[DEBUG] API - Dosya işleniyor', [
-                            'index' => $index,
-                            'name' => $file->getClientOriginalName(),
-                        ]);
-
+                    foreach ($request->file('files') as $file) {
                         $fileInfo = $this->fileStorageService->store(
                             $file,
                             $jobNo,
                             $technicalData->id
                         );
 
-                        \Log::info('[DEBUG] API - Dosya kaydedildi', [
-                            'fileInfo' => $fileInfo,
-                        ]);
-
-                        $erpFile = ErpFile::create([
+                        ErpFile::create([
                             'job_id' => $job->id,
                             'baglanti_id' => $technicalData->id,
                             'baglanti_tablo_adi' => 'technical_datas',
@@ -166,16 +131,10 @@ class RequestController extends Controller
                             'extension' => $fileInfo['extension'],
                             'dosya_boyut' => $fileInfo['size'],
                             'aciklama' => "Portal - Talep No: {$portalRequest->request_no}",
-                            'user_id' => null, // Portal user, ERP user değil
+                            'user_id' => null,
                             'is_active' => 1,
                         ]);
-
-                        \Log::info('[DEBUG] API - ErpFile kaydı oluşturuldu', [
-                            'erpFile_id' => $erpFile->id,
-                        ]);
                     }
-                } else {
-                    \Log::info('[DEBUG] API - Dosya yok, atlanıyor');
                 }
 
                 // 5. İlk durum logu ekle
@@ -197,21 +156,16 @@ class RequestController extends Controller
             ], 201);
 
         } catch (\Exception $e) {
-            \Log::error('[DEBUG] Talep oluşturma hatası', [
+            \Log::error('Talep oluşturma hatası', [
                 'message' => $e->getMessage(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
                 'success' => false,
                 'message' => 'Talep oluşturulurken bir hata oluştu.',
-                'error' => $e->getMessage(), // Debug için her zaman göster
-                'debug' => [
-                    'file' => $e->getFile(),
-                    'line' => $e->getLine(),
-                ],
+                'error' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
     }

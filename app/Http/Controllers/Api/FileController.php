@@ -55,78 +55,38 @@ class FileController extends Controller
      */
     public function store(UploadFileRequest $request, int $requestId): JsonResponse
     {
-        \Log::info('[DEBUG] API FileController::store başladı', [
-            'requestId' => $requestId,
-            'has_files' => $request->hasFile('files'),
-            'files_count' => $request->hasFile('files') ? count($request->file('files')) : 0,
-            'all_input' => $request->all(),
-        ]);
-
         $user = Auth::guard('api')->user();
-
-        \Log::info('[DEBUG] User bilgisi', [
-            'user_id' => $user->id ?? null,
-            'company_id' => $user->company_id ?? null,
-        ]);
 
         $portalRequest = PortalRequest::forCompany($user->company_id)
             ->active()
             ->find($requestId);
 
         if (!$portalRequest) {
-            \Log::error('[DEBUG] Talep bulunamadı', ['requestId' => $requestId]);
             return response()->json([
                 'success' => false,
                 'message' => 'Talep bulunamadı.',
             ], 404);
         }
 
-        \Log::info('[DEBUG] Portal request bulundu', [
-            'portal_request_id' => $portalRequest->id,
-            'job_id' => $portalRequest->job_id,
-        ]);
-
-        // Job ve technical data bilgilerini al
         $job = Job::with('technicalData')->find($portalRequest->job_id);
 
         if (!$job || !$job->technicalData) {
-            \Log::error('[DEBUG] Job veya technical data bulunamadı', [
-                'job_id' => $portalRequest->job_id,
-                'job_exists' => $job ? true : false,
-                'has_technical_data' => $job && $job->technicalData ? true : false,
-            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'İş veya teknik veri bulunamadı.',
             ], 404);
         }
 
-        \Log::info('[DEBUG] Job ve technical data bulundu', [
-            'job_no' => $job->job_no,
-            'technical_data_id' => $job->technicalData->id,
-        ]);
-
         try {
             $uploadedFiles = [];
 
-            foreach ($request->file('files') as $index => $file) {
-                \Log::info('[DEBUG] Dosya işleniyor', [
-                    'index' => $index,
-                    'name' => $file->getClientOriginalName(),
-                    'size' => $file->getSize(),
-                    'mime' => $file->getMimeType(),
-                ]);
-
-                // Dosyayı kaydet
+            foreach ($request->file('files') as $file) {
                 $fileInfo = $this->fileStorageService->store(
                     $file,
                     $job->job_no,
                     $job->technicalData->id
                 );
 
-                \Log::info('[DEBUG] Dosya kaydedildi', ['fileInfo' => $fileInfo]);
-
-                // ERP files tablosuna kayıt ekle
                 $erpFile = ErpFile::create([
                     'job_id' => $portalRequest->job_id,
                     'baglanti_id' => $portalRequest->id,
@@ -136,16 +96,12 @@ class FileController extends Controller
                     'extension' => $fileInfo['extension'],
                     'dosya_boyut' => $fileInfo['size'],
                     'aciklama' => $request->description ?? 'Portal üzerinden yüklendi.',
-                    'user_id' => null, // Portal user, ERP user değil
+                    'user_id' => null,
                     'is_active' => 1,
                 ]);
 
-                \Log::info('[DEBUG] DB kaydı oluşturuldu', ['erpFile_id' => $erpFile->id]);
-
                 $uploadedFiles[] = new FileResource($erpFile);
             }
-
-            \Log::info('[DEBUG] Tüm dosyalar başarıyla yüklendi', ['count' => count($uploadedFiles)]);
 
             return response()->json([
                 'success' => true,
@@ -154,23 +110,17 @@ class FileController extends Controller
             ], 201);
 
         } catch (\InvalidArgumentException $e) {
-            \Log::error('[DEBUG] InvalidArgumentException', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
             ], 400);
         } catch (\Exception $e) {
-            \Log::error('[DEBUG] Exception', [
+            \Log::error('Dosya yükleme hatası', [
                 'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
             ]);
             return response()->json([
                 'success' => false,
-                'message' => 'Dosya yüklenirken bir hata oluştu: ' . $e->getMessage(),
-                'error' => $e->getMessage(),
+                'message' => 'Dosya yüklenirken bir hata oluştu.',
             ], 500);
         }
     }
