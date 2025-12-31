@@ -12,8 +12,8 @@ use Illuminate\Support\Facades\File;
  * File Storage Service
  * Dosya yükleme ve yönetim işlemleri.
  *
- * Klasör yapısı: {base_path}/{yıl}/{ay}/{job_no}/{subfolder}/{technical_data_id}/
- * Örnek: /mnt/yudo_data/2025/01/YT25-1001/drawing_log/12345/kalip-cizim.pdf
+ * Klasör yapısı: {base_path}/Sales/{yıl}/{ay}/{job_no}/{subfolder}/{technical_data_id}/
+ * Örnek: /mnt/yudo_data/Sales/2025/01/YT25-1001/drawing_log/12345/kalip-cizim.pdf
  */
 class FileStorageService
 {
@@ -33,7 +33,7 @@ class FileStorageService
 
     /**
      * Dosya yükleme path'i oluştur
-     * Format: {base}/{yıl}/{ay}/{job_no}/drawing_log/{technical_data_id}/
+     * Format: {base}/Sales/{yıl}/{ay}/{job_no}/drawing_log/{technical_data_id}/
      */
     public function buildPath(string $jobNo, int $technicalDataId): string
     {
@@ -41,7 +41,7 @@ class FileStorageService
         $month = date('m'); // 01, 02, ... 12
 
         $path = sprintf(
-            '%s/%s/%s/%s/%s/%d',
+            '%s/Sales/%s/%s/%s/%s/%d',
             $this->basePath,
             $year,
             $month,
@@ -79,7 +79,7 @@ class FileStorageService
 
         // Relative path (DB'ye kaydedilecek)
         $relativePath = sprintf(
-            '%s/%s/%s/%s/%d/%s',
+            'Sales/%s/%s/%s/%s/%d/%s',
             date('Y'),
             date('m'),
             $jobNo,

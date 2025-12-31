@@ -20,8 +20,8 @@ return [
     |--------------------------------------------------------------------------
     | Dosya Yükleme Ayarları (NFS Mount)
     |--------------------------------------------------------------------------
-    | Klasör yapısı: {base_path}/{yıl}/{ay}/{job_no}/{subfolder}/{technical_data_id}/
-    | Örnek: /mnt/yudo_data/2025/01/YT25-1001/drawing_log/12345/kalip-cizim.pdf
+    | Klasör yapısı: {base_path}/Sales/{yıl}/{ay}/{job_no}/{subfolder}/{technical_data_id}/
+    | Örnek: /mnt/yudo_data/Sales/2025/01/YT25-1001/drawing_log/12345/kalip-cizim.pdf
     */
     'upload' => [
         'max_size' => env('FILE_UPLOAD_MAX_SIZE', 52428800), // 50MB
