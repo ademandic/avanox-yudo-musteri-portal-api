@@ -51,6 +51,7 @@ services:
       - ./.env:/var/www/html/.env:ro
       - ./storage:/var/www/html/storage
       - portal-files:/var/www/html/storage/app/portal-files
+      - /mnt/yudo_data:/mnt/yudo_data
     environment:
       - APP_ENV=production
       - APP_DEBUG=false
@@ -114,6 +115,7 @@ services:
     volumes:
       - ./.env:/var/www/html/.env:ro
       - ./storage:/var/www/html/storage
+      - /mnt/yudo_data:/mnt/yudo_data
     environment:
       - APP_ENV=production
       - APP_DEBUG=false
