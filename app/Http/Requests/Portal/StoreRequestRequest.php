@@ -37,8 +37,8 @@ class StoreRequestRequest extends FormRequest
             'katki_orani' => ['nullable', 'numeric', 'min:0', 'max:100'],
 
             // Kalıp bilgileri
-            'kalip_x' => ['required', 'numeric', 'min:1', 'max:9999'],
-            'kalip_y' => ['required', 'numeric', 'min:1', 'max:9999'],
+            'kalip_x' => ['nullable', 'numeric', 'min:1', 'max:9999'],
+            'kalip_y' => ['nullable', 'numeric', 'min:1', 'max:9999'],
             'kalip_d' => ['nullable', 'numeric', 'min:1', 'max:9999'],
             'kalip_l' => ['nullable', 'numeric', 'min:1', 'max:9999'],
             'kalip_z' => ['nullable', 'numeric', 'min:1', 'max:9999'],
@@ -48,12 +48,18 @@ class StoreRequestRequest extends FormRequest
             'meme_sayisi' => ['required', 'integer', 'min:1', 'max:256'],
             'meme_tipi' => ['required', 'string', 'in:' . $nozzleTypes],
 
-            // Dosya yükleme
+            // Dosya yükleme - extension bazlı kontrol (CAD dosyaları için MIME tanınmıyor)
             'files' => ['nullable', 'array', 'max:10'],
             'files.*' => [
                 'file',
                 'max:51200', // 50MB
-                'mimes:pdf,jpg,jpeg,png,dwg,step,stp,iges,igs,x_t,ai,psd,zip,rar',
+                function ($attribute, $value, $fail) {
+                    $allowedExtensions = ['pdf', 'jpg', 'jpeg', 'png', 'dwg', 'step', 'stp', 'iges', 'igs', 'x_t', 'ai', 'psd', 'zip', 'rar'];
+                    $extension = strtolower($value->getClientOriginalExtension());
+                    if (!in_array($extension, $allowedExtensions)) {
+                        $fail('İzin verilen formatlar: PDF, JPG, PNG, DWG, STEP, IGES, X_T, AI, PSD, ZIP, RAR');
+                    }
+                },
             ],
         ];
     }
