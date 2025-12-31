@@ -68,19 +68,33 @@ class FileController extends Controller
             ], 404);
         }
 
+        // Job ve technical data bilgilerini al
+        $job = Job::with('technicalData')->find($portalRequest->job_id);
+
+        if (!$job || !$job->technicalData) {
+            return response()->json([
+                'success' => false,
+                'message' => 'İş veya teknik veri bulunamadı.',
+            ], 404);
+        }
+
         try {
             $uploadedFiles = [];
 
             foreach ($request->file('files') as $file) {
                 // Dosyayı kaydet
-                $fileInfo = $this->fileStorageService->store($file);
+                $fileInfo = $this->fileStorageService->store(
+                    $file,
+                    $job->job_no,
+                    $job->technicalData->id
+                );
 
                 // ERP files tablosuna kayıt ekle
                 $erpFile = ErpFile::create([
                     'job_id' => $portalRequest->job_id,
                     'baglanti_id' => $portalRequest->id,
                     'baglanti_tablo_adi' => 'portal_requests',
-                    'dosya_yolu' => $fileInfo['storage_path'],
+                    'dosya_yolu' => $fileInfo['relative_path'],
                     'dosya_adi' => $fileInfo['original_name'],
                     'extension' => $fileInfo['extension'],
                     'dosya_boyut' => $fileInfo['size'],
