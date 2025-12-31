@@ -197,10 +197,21 @@ class RequestController extends Controller
             ], 201);
 
         } catch (\Exception $e) {
+            \Log::error('[DEBUG] Talep oluşturma hatası', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Talep oluşturulurken bir hata oluştu.',
-                'error' => config('app.debug') ? $e->getMessage() : null,
+                'error' => $e->getMessage(), // Debug için her zaman göster
+                'debug' => [
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                ],
             ], 500);
         }
     }
