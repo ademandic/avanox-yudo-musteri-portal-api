@@ -65,10 +65,15 @@ class FileStorageService
     {
         $this->validateFile($file);
 
+        // Dosya bilgilerini ÖNCE al (move() sonrası erişilemez)
+        $originalName = $file->getClientOriginalName();
+        $extension = strtolower($file->getClientOriginalExtension());
+        $mimeType = $file->getMimeType();
+        $size = $file->getSize();
+
         $path = $this->buildPath($jobNo, $technicalDataId);
 
         // Orijinal dosya adını koru (güvenli hale getir)
-        $originalName = $file->getClientOriginalName();
         $safeName = $this->sanitizeFileName($originalName);
 
         // Aynı isimde dosya varsa numara ekle
@@ -93,9 +98,9 @@ class FileStorageService
             'saved_name' => $finalName,
             'relative_path' => $relativePath,
             'full_path' => $path . '/' . $finalName,
-            'extension' => strtolower($file->getClientOriginalExtension()),
-            'mime_type' => $file->getMimeType(),
-            'size' => $file->getSize(),
+            'extension' => $extension,
+            'mime_type' => $mimeType,
+            'size' => $size,
         ];
     }
 
