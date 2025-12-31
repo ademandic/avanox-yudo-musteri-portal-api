@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\File;
  * Dosya yükleme ve yönetim işlemleri.
  *
  * Klasör yapısı: {base_path}/Sales/{yıl}/{ay}/{job_no}/{subfolder}/{technical_data_id}/
- * Örnek: /mnt/yudo_data/Sales/2025/01/YT25-1001/drawing_log/12345/kalip-cizim.pdf
+ * Örnek: /mnt/yudo_data/Sales/2025/01/YT25-1/drawing_log/12345/kalip-cizim.pdf
  */
 class FileStorageService
 {

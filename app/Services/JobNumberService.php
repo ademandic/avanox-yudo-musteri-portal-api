@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 /**
  * Job Number Service
  * Yeni iş numarası oluşturur.
- * Format: YT{YY}-{SIRA} (örn: YT25-1001)
+ * Format: YT{YY}-{SIRA} (örn: YT26-1, YT26-2, YT26-125)
  */
 class JobNumberService
 {
