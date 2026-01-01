@@ -71,6 +71,8 @@ class User extends Authenticatable implements JWTSubject
         'is_portal_user' => 'boolean',
         'is_company_admin' => 'boolean',
         'is_active' => 'boolean',
+        'company_id' => 'integer',
+        'contact_id' => 'integer',
         'two_factor_expires_at' => 'datetime',
         'two_factor_attempts' => 'integer',
         'skip_two_factor' => 'boolean',
