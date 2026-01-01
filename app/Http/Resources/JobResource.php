@@ -72,6 +72,13 @@ class JobResource extends JsonResource
                     'priority_label' => $this->portalRequest->priority_label,
                     'is_editable' => $this->portalRequest->isEditable(),
                     'is_cancellable' => $this->portalRequest->isCancellable(),
+                    'created_by' => $this->portalRequest->relationLoaded('portalUser') && $this->portalRequest->portalUser
+                        ? [
+                            'id' => $this->portalRequest->portalUser->id,
+                            'name' => $this->portalRequest->portalUser->name,
+                            'email' => $this->portalRequest->portalUser->email,
+                        ]
+                        : null,
                     'current_state' => $this->portalRequest->currentState ? [
                         'id' => $this->portalRequest->currentState->id,
                         'name' => $this->portalRequest->currentState->name,

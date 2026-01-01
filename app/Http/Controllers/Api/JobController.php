@@ -20,10 +20,9 @@ class JobController extends Controller
     {
         $user = Auth::guard('api')->user();
 
-        $query = Job::with(['technicalData', 'portalRequest.currentState'])
+        $query = Job::with(['technicalData', 'portalRequest.currentState', 'portalRequest.portalUser'])
             ->forCompany($user->company_id)
-            ->orderBy('created_at', 'desc')
-            ->limit(20);
+            ->orderBy('created_at', 'desc');
 
         // Arama filtresi
         if ($request->has('search')) {
@@ -68,6 +67,7 @@ class JobController extends Controller
                 $query->active()->orderBy('created_at', 'desc');
             },
             'portalRequest.currentState',
+            'portalRequest.portalUser',
             'portalRequest.stateLogs.state'
         ])
             ->forCompany($user->company_id)
