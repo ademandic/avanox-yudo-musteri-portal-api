@@ -57,6 +57,12 @@ class RequestController extends Controller
     {
         $user = Auth::guard('api')->user();
 
+        \Log::error('DEBUG RequestController::store - Request received', [
+            'user_id' => $user->id,
+            'company_id' => $user->company_id,
+            'all_data' => $request->all(),
+        ]);
+
         try {
             $result = DB::transaction(function () use ($request, $user) {
                 // 1. Job oluştur
