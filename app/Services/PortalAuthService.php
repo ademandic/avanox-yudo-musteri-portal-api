@@ -72,6 +72,11 @@ class PortalAuthService
             ];
         }
 
+        // 2FA atlanacak mı? (test/geliştirme için)
+        if ($user->skip_two_factor) {
+            return $this->createTokenResponse($user, $ip);
+        }
+
         // 2FA kodu oluştur ve gönder
         $sent = $this->twoFactorService->generateAndSend($user);
 
@@ -90,6 +95,44 @@ class PortalAuthService
             'message' => 'Doğrulama kodu e-posta adresinize gönderildi.',
             'user_id' => $user->id,
             'email_masked' => $this->maskEmail($user->email),
+        ];
+    }
+
+    /**
+     * Token oluştur ve döndür (2FA sonrası veya skip durumunda)
+     */
+    protected function createTokenResponse(User $user, string $ip): array
+    {
+        $token = Auth::guard('api')->login($user);
+
+        if (!$token) {
+            return [
+                'success' => false,
+                'error' => 'token_failed',
+                'message' => 'Oturum oluşturulamadı.',
+            ];
+        }
+
+        // Session ID oluştur
+        $sessionId = Str::uuid()->toString();
+
+        // Kullanıcı bilgilerini güncelle
+        $user->update([
+            'last_login_at' => Carbon::now(),
+            'last_login_ip' => $ip,
+            'last_activity_at' => Carbon::now(),
+            'current_session_id' => $sessionId,
+        ]);
+
+        return [
+            'success' => true,
+            'data' => [
+                'access_token' => $token,
+                'token_type' => 'bearer',
+                'expires_in' => Auth::guard('api')->factory()->getTTL() * 60,
+                'session_id' => $sessionId,
+                'user' => $this->getUserData($user),
+            ],
         ];
     }
 
@@ -117,38 +160,7 @@ class PortalAuthService
             return $result;
         }
 
-        // Token oluştur
-        $token = Auth::guard('api')->login($user);
-
-        if (!$token) {
-            return [
-                'success' => false,
-                'error' => 'token_failed',
-                'message' => 'Oturum oluşturulamadı.',
-            ];
-        }
-
-        // Session ID oluştur (tek oturum kontrolü için)
-        $sessionId = Str::uuid()->toString();
-
-        // Kullanıcı bilgilerini güncelle
-        $user->update([
-            'last_login_at' => Carbon::now(),
-            'last_login_ip' => $ip,
-            'last_activity_at' => Carbon::now(),
-            'current_session_id' => $sessionId,
-        ]);
-
-        return [
-            'success' => true,
-            'data' => [
-                'access_token' => $token,
-                'token_type' => 'bearer',
-                'expires_in' => Auth::guard('api')->factory()->getTTL() * 60,
-                'session_id' => $sessionId,
-                'user' => $this->getUserData($user),
-            ],
-        ];
+        return $this->createTokenResponse($user, $ip);
     }
 
     /**

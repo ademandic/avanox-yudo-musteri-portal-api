@@ -45,6 +45,7 @@ class User extends Authenticatable implements JWTSubject
         'two_factor_code',
         'two_factor_expires_at',
         'two_factor_attempts',
+        'skip_two_factor',
         'locked_until',
 
         // Session alanları
@@ -72,6 +73,7 @@ class User extends Authenticatable implements JWTSubject
         'is_active' => 'boolean',
         'two_factor_expires_at' => 'datetime',
         'two_factor_attempts' => 'integer',
+        'skip_two_factor' => 'boolean',
         'locked_until' => 'datetime',
         'last_login_at' => 'datetime',
         'last_activity_at' => 'datetime',
