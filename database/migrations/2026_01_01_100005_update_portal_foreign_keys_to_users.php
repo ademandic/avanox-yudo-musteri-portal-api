@@ -22,7 +22,7 @@ return new class extends Migration
             $table->foreign('portal_user_id')
                   ->references('id')
                   ->on('users')
-                  ->onDelete('restrict');
+                  ->onDelete('no action');
         });
 
         // 2. portal_request_state_logs tablosu
@@ -62,7 +62,7 @@ return new class extends Migration
             $table->foreign('portal_user_id')
                   ->references('id')
                   ->on('portal_users')
-                  ->onDelete('restrict');
+                  ->onDelete('no action');
         });
 
         // 2. portal_request_state_logs - geri al
