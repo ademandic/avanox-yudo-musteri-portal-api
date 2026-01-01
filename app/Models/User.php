@@ -36,6 +36,7 @@ class User extends Authenticatable implements JWTSubject
         // Portal alanları
         'is_portal_user',
         'company_id',
+        'contact_id',
         'is_company_admin',
         'is_active',
         'password',
@@ -113,6 +114,14 @@ class User extends Authenticatable implements JWTSubject
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
+    }
+
+    /**
+     * İlişkili contact (firma yetkilisi)
+     */
+    public function contact(): BelongsTo
+    {
+        return $this->belongsTo(Contact::class);
     }
 
     /**
