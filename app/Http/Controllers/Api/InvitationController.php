@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Invitation\AcceptInvitationRequest;
 use App\Http\Resources\InvitationResource;
-use App\Http\Resources\PortalUserResource;
+use App\Http\Resources\UserResource;
 use App\Services\InvitationService;
 use Illuminate\Http\JsonResponse;
 
@@ -58,22 +58,23 @@ class InvitationController extends Controller
         }
 
         try {
-            $portalUser = $this->invitationService->accept(
+            $user = $this->invitationService->accept(
                 $invitation,
-                $request->password
+                $request->password,
+                $request->ip()
             );
 
             // Otomatik login
-            $token = auth('api')->login($portalUser);
+            $jwtToken = auth('api')->login($user);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Hesabınız başarıyla oluşturuldu.',
                 'data' => [
-                    'access_token' => $token,
+                    'access_token' => $jwtToken,
                     'token_type' => 'bearer',
                     'expires_in' => auth('api')->factory()->getTTL() * 60,
-                    'user' => new PortalUserResource($portalUser->load(['contact', 'company'])),
+                    'user' => new UserResource($user->load('company')),
                 ],
             ], 201);
         } catch (\Exception $e) {

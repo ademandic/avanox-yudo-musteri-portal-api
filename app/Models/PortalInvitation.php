@@ -24,7 +24,13 @@ class PortalInvitation extends Model
         'company_id',
         'token',
         'email',
+        'first_name',
+        'last_name',
         'invited_by_user_id',
+        'invited_by_portal_user_id',
+        'role_name',
+        'invited_from_ip',
+        'accepted_from_ip',
         'sent_at',
         'expires_at',
         'accepted_at',
@@ -68,11 +74,19 @@ class PortalInvitation extends Model
     }
 
     /**
-     * Oluşturulan portal kullanıcısı
+     * Daveti gönderen Portal Admin kullanıcısı
+     */
+    public function invitedByPortalUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'invited_by_portal_user_id');
+    }
+
+    /**
+     * Oluşturulan portal kullanıcısı (users tablosunda is_portal_user=true)
      */
     public function portalUser(): BelongsTo
     {
-        return $this->belongsTo(PortalUser::class);
+        return $this->belongsTo(User::class, 'portal_user_id');
     }
 
     /**

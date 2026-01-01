@@ -47,11 +47,11 @@ class Company extends Model
     }
 
     /**
-     * Firmaya ait portal kullanıcıları
+     * Firmaya ait portal kullanıcıları (users tablosunda is_portal_user=true)
      */
     public function portalUsers(): HasMany
     {
-        return $this->hasMany(PortalUser::class);
+        return $this->hasMany(User::class)->where('is_portal_user', true);
     }
 
     /**

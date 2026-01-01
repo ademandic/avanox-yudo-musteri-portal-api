@@ -69,11 +69,11 @@ class PortalRequestStateLog extends Model
     }
 
     /**
-     * Değişikliği yapan portal kullanıcısı
+     * Değişikliği yapan portal kullanıcısı (users tablosunda is_portal_user=true)
      */
     public function changedByPortalUser(): BelongsTo
     {
-        return $this->belongsTo(PortalUser::class, 'changed_by_portal_user_id');
+        return $this->belongsTo(User::class, 'changed_by_portal_user_id');
     }
 
     /**

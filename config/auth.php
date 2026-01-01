@@ -10,7 +10,7 @@ return [
 
     'defaults' => [
         'guard' => 'api',
-        'passwords' => 'portal_users',
+        'passwords' => 'users',
     ],
 
     /*
@@ -27,7 +27,7 @@ return [
 
         'api' => [
             'driver' => 'jwt',
-            'provider' => 'portal_users',
+            'provider' => 'users',
         ],
     ],
 
@@ -40,12 +40,7 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', App\Models\User::class),
-        ],
-
-        'portal_users' => [
-            'driver' => 'eloquent',
-            'model' => App\Models\PortalUser::class,
+            'model' => App\Models\User::class,
         ],
     ],
 
@@ -56,9 +51,9 @@ return [
     */
 
     'passwords' => [
-        'portal_users' => [
-            'provider' => 'portal_users',
-            'table' => 'portal_password_reset_tokens',
+        'users' => [
+            'provider' => 'users',
+            'table' => 'password_reset_tokens',
             'expire' => 60,
             'throttle' => 60,
         ],

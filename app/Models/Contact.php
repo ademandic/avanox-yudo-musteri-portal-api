@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * ERP Contact Model - READONLY
@@ -35,11 +34,14 @@ class Contact extends Model
     }
 
     /**
-     * Portal kullanıcısı (varsa)
+     * Bu email ile kayıtlı portal kullanıcısı (varsa)
+     * Portal kullanıcıları artık users tablosunda is_portal_user=true olarak tutulur
      */
-    public function portalUser(): HasOne
+    public function portalUser()
     {
-        return $this->hasOne(PortalUser::class);
+        return User::where('email', $this->email)
+            ->where('is_portal_user', true)
+            ->first();
     }
 
     /**

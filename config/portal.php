@@ -18,6 +18,38 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | 2FA (İki Faktörlü Doğrulama) Ayarları
+    |--------------------------------------------------------------------------
+    */
+    'two_factor' => [
+        // Kod geçerlilik süresi (dakika)
+        'code_validity_minutes' => env('PORTAL_2FA_CODE_VALIDITY', 5),
+
+        // Maksimum yanlış deneme sayısı
+        'max_attempts' => env('PORTAL_2FA_MAX_ATTEMPTS', 3),
+
+        // Hesap kilitleme süresi (dakika)
+        'lockout_minutes' => env('PORTAL_2FA_LOCKOUT_MINUTES', 15),
+
+        // Yeni kod gönderme aralığı (saniye)
+        'resend_cooldown_seconds' => env('PORTAL_2FA_RESEND_COOLDOWN', 60),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Session Ayarları
+    |--------------------------------------------------------------------------
+    */
+    'session' => [
+        // İnaktivite timeout süresi (dakika)
+        'timeout_minutes' => env('PORTAL_SESSION_TIMEOUT', 5),
+
+        // Tek oturum kontrolü
+        'single_session' => env('PORTAL_SINGLE_SESSION', true),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Dosya Yükleme Ayarları (NFS Mount)
     |--------------------------------------------------------------------------
     | Klasör yapısı: {base_path}/Sales/{yıl}/{ay}/{job_no}/{subfolder}/{technical_data_id}/
@@ -48,6 +80,16 @@ return [
         'prefix' => 'PR',
         'year_format' => 'Y',  // 2025, 2026...
         'padding' => 4,        // PR-2025-0001
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Kullanıcı Ayarları
+    |--------------------------------------------------------------------------
+    */
+    'users' => [
+        // Firma başına maksimum portal kullanıcı sayısı
+        'max_per_company' => env('PORTAL_MAX_USERS_PER_COMPANY', 10),
     ],
 
     /*

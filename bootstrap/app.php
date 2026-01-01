@@ -17,6 +17,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'portal.api-key' => \App\Http\Middleware\ValidatePortalApiKey::class,
             'portal.log' => \App\Http\Middleware\LogApiRequests::class,
+            'session.timeout' => \App\Http\Middleware\CheckSessionTimeout::class,
+            'single.session' => \App\Http\Middleware\CheckSingleSession::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

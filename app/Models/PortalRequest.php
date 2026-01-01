@@ -51,11 +51,11 @@ class PortalRequest extends Model
     ];
 
     /**
-     * Talebi oluşturan portal kullanıcısı
+     * Talebi oluşturan portal kullanıcısı (users tablosunda is_portal_user=true)
      */
     public function portalUser(): BelongsTo
     {
-        return $this->belongsTo(PortalUser::class);
+        return $this->belongsTo(User::class, 'portal_user_id');
     }
 
     /**

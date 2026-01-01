@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\ErpFile;
 use App\Models\Job;
-use App\Models\PortalUser;
+use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 
@@ -166,7 +166,7 @@ class FileStorageService
     /**
      * Dosya erişim kontrolü
      */
-    public function canAccess(PortalUser $user, ErpFile $file): bool
+    public function canAccess(User $user, ErpFile $file): bool
     {
         // Dosyanın bağlı olduğu job'ı kontrol et
         $job = Job::find($file->job_id);

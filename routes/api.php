@@ -7,6 +7,8 @@ use App\Http\Controllers\Api\InvitationController;
 use App\Http\Controllers\Api\JobController;
 use App\Http\Controllers\Api\LookupController;
 use App\Http\Controllers\Api\RequestController;
+use App\Http\Controllers\Api\SettingsController;
+use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -63,9 +65,11 @@ Route::middleware(['portal.api-key', 'portal.log'])->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    // Auth - Login
+    // Auth - Public (login, 2FA)
     Route::prefix('auth')->group(function () {
         Route::post('/login', [AuthController::class, 'login']);
+        Route::post('/verify-2fa', [AuthController::class, 'verifyTwoFactor']);
+        Route::post('/resend-2fa', [AuthController::class, 'resendTwoFactor']);
     });
 
     // Davetiye routes (kayıt olmadan erişilebilir)
@@ -90,10 +94,14 @@ Route::middleware(['portal.api-key', 'portal.log'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Protected Routes (API Key + JWT required)
+    | Protected Routes (API Key + JWT + Session Check)
     |--------------------------------------------------------------------------
     */
-    Route::middleware(['auth:api'])->group(function () {
+    Route::middleware([
+        'auth:api',
+        \App\Http\Middleware\CheckSessionTimeout::class,
+        \App\Http\Middleware\CheckSingleSession::class,
+    ])->group(function () {
 
         // Auth routes (authenticated)
         Route::prefix('auth')->group(function () {
@@ -131,6 +139,24 @@ Route::middleware(['portal.api-key', 'portal.log'])->group(function () {
                 ->where('id', '[0-9]+')
                 ->name('files.download');
             Route::delete('/{id}', [FileController::class, 'destroy'])->where('id', '[0-9]+');
+        });
+
+        // User Management routes (Company Admin only)
+        Route::prefix('users')->group(function () {
+            Route::get('/', [UserController::class, 'index']);
+            Route::post('/invite', [UserController::class, 'invite']);
+            Route::post('/{id}/toggle-status', [UserController::class, 'toggleStatus'])->where('id', '[0-9]+');
+            Route::delete('/{id}', [UserController::class, 'destroy'])->where('id', '[0-9]+');
+            Route::delete('/invitations/{id}', [UserController::class, 'cancelInvitation'])->where('id', '[0-9]+');
+        });
+
+        // Settings routes
+        Route::prefix('settings')->group(function () {
+            Route::get('/', [SettingsController::class, 'index']);
+            Route::put('/theme', [SettingsController::class, 'updateTheme']);
+            Route::put('/language', [SettingsController::class, 'updateLanguage']);
+            Route::put('/profile', [SettingsController::class, 'updateProfile']);
+            Route::put('/password', [SettingsController::class, 'updatePassword']);
         });
     });
 });

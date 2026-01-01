@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Contact;
 use App\Models\PortalInvitation;
-use App\Models\PortalUser;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -17,7 +16,7 @@ use Illuminate\Support\Str;
 class InvitationService
 {
     /**
-     * Yeni davetiye oluştur
+     * Yeni davetiye oluştur (ERP User tarafından)
      */
     public function create(Contact $contact, User $invitedBy): PortalInvitation
     {
@@ -33,7 +32,9 @@ class InvitationService
         }
 
         // Zaten kayıtlı bir portal kullanıcısı var mı?
-        $existingUser = PortalUser::where('email', $contact->email)->first();
+        $existingUser = User::where('email', $contact->email)
+            ->where('is_portal_user', true)
+            ->first();
         if ($existingUser) {
             throw new \Exception('Bu email adresi ile kayıtlı bir kullanıcı zaten mevcut.');
         }
@@ -44,6 +45,67 @@ class InvitationService
             'email' => $contact->email,
             'token' => $this->generateToken($config['token_length']),
             'invited_by_user_id' => $invitedBy->id,
+            'sent_at' => now(),
+            'expires_at' => now()->addDays($config['expires_in_days']),
+            'status' => PortalInvitation::STATUS_PENDING,
+            'is_active' => true,
+        ]);
+    }
+
+    /**
+     * Portal Admin tarafından davetiye oluştur
+     */
+    public function createByPortalAdmin(
+        string $email,
+        string $firstName,
+        string $lastName,
+        User $invitedBy,
+        string $roleName = 'Portal User',
+        ?string $ip = null
+    ): PortalInvitation {
+        $config = config('portal.invitation');
+
+        // Aynı email için bekleyen davet var mı?
+        $existingInvitation = PortalInvitation::where('email', $email)
+            ->pending()
+            ->first();
+
+        if ($existingInvitation && $existingInvitation->isValid()) {
+            throw new \Exception('Bu email için zaten bekleyen bir davetiye mevcut.');
+        }
+
+        // Zaten kayıtlı bir portal kullanıcısı var mı?
+        $existingUser = User::where('email', $email)
+            ->where('is_portal_user', true)
+            ->first();
+        if ($existingUser) {
+            throw new \Exception('Bu email adresi ile kayıtlı bir kullanıcı zaten mevcut.');
+        }
+
+        // Max kullanıcı limiti kontrolü
+        $maxUsers = config('portal.users.max_per_company', 10);
+        $currentUsers = User::where('company_id', $invitedBy->company_id)
+            ->where('is_portal_user', true)
+            ->count();
+        $pendingInvitations = PortalInvitation::where('company_id', $invitedBy->company_id)
+            ->pending()
+            ->count();
+
+        if (($currentUsers + $pendingInvitations) >= $maxUsers) {
+            throw new \Exception("Maksimum kullanıcı limitine ({$maxUsers}) ulaşıldı.");
+        }
+
+        return PortalInvitation::create([
+            'contact_id' => null,
+            'company_id' => $invitedBy->company_id,
+            'email' => $email,
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'token' => $this->generateToken($config['token_length']),
+            'invited_by_user_id' => null,
+            'invited_by_portal_user_id' => $invitedBy->id,
+            'role_name' => $roleName,
+            'invited_from_ip' => $ip,
             'sent_at' => now(),
             'expires_at' => now()->addDays($config['expires_in_days']),
             'status' => PortalInvitation::STATUS_PENDING,
@@ -64,7 +126,7 @@ class InvitationService
     /**
      * Davetiyeyi kabul et ve kullanıcı oluştur
      */
-    public function accept(PortalInvitation $invitation, string $password): PortalUser
+    public function accept(PortalInvitation $invitation, string $password, ?string $ip = null): User
     {
         if (!$invitation->isValid()) {
             if ($invitation->isExpired()) {
@@ -76,24 +138,32 @@ class InvitationService
             throw new \Exception('Davetiye geçerli değil.');
         }
 
-        return DB::transaction(function () use ($invitation, $password) {
-            // Portal kullanıcısı oluştur
-            $portalUser = PortalUser::create([
-                'contact_id' => $invitation->contact_id,
-                'company_id' => $invitation->company_id,
+        return DB::transaction(function () use ($invitation, $password, $ip) {
+            // Portal kullanıcısı oluştur (users tablosunda)
+            $user = User::create([
+                'first_name' => $invitation->contact?->first_name ?? $invitation->first_name,
+                'surname' => $invitation->contact?->surname ?? $invitation->last_name,
                 'email' => $invitation->email,
                 'password' => Hash::make($password),
+                'is_portal_user' => true,
+                'company_id' => $invitation->company_id,
+                'is_company_admin' => $invitation->role_name === 'Portal Admin',
                 'is_active' => true,
             ]);
+
+            // Rol ata
+            $roleName = $invitation->role_name ?? 'Portal User';
+            $user->assignRole($roleName);
 
             // Davetiyeyi kabul edildi olarak işaretle
             $invitation->update([
                 'status' => PortalInvitation::STATUS_ACCEPTED,
                 'accepted_at' => now(),
-                'portal_user_id' => $portalUser->id,
+                'portal_user_id' => $user->id,
+                'accepted_from_ip' => $ip,
             ]);
 
-            return $portalUser;
+            return $user;
         });
     }
 

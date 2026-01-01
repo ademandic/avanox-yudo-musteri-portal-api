@@ -4,49 +4,103 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
-use App\Http\Resources\PortalUserResource;
-use App\Models\PortalUser;
+use App\Http\Requests\Auth\VerifyTwoFactorRequest;
+use App\Http\Requests\Auth\ResendTwoFactorRequest;
+use App\Http\Resources\UserResource;
+use App\Services\PortalAuthService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
+    protected PortalAuthService $authService;
+
+    public function __construct(PortalAuthService $authService)
+    {
+        $this->authService = $authService;
+    }
+
     /**
-     * Login
+     * Login - İlk adım (2FA kodu gönderir)
      * POST /api/auth/login
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "requires_2fa": true,
+     *   "message": "Doğrulama kodu e-posta adresinize gönderildi.",
+     *   "user_id": 123,
+     *   "email_masked": "ab***@domain.com"
+     * }
      */
     public function login(LoginRequest $request): JsonResponse
     {
-        $credentials = $request->only('email', 'password');
+        $result = $this->authService->login(
+            $request->email,
+            $request->password,
+            $request->ip()
+        );
 
-        // Kullanıcının aktif olup olmadığını kontrol et
-        $user = PortalUser::where('email', $credentials['email'])->first();
+        $statusCode = match ($result['error'] ?? null) {
+            'invalid_credentials' => 401,
+            'inactive' => 403,
+            'locked' => 423,
+            default => $result['success'] ? 200 : 400,
+        };
 
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Geçersiz kimlik bilgileri.',
-            ], 401);
-        }
+        return response()->json($result, $statusCode);
+    }
 
-        if (!$user->is_active) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Hesabınız pasif durumdadır. Lütfen destek ile iletişime geçin.',
-            ], 403);
-        }
+    /**
+     * 2FA doğrulama - İkinci adım (Token döner)
+     * POST /api/auth/verify-2fa
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "data": {
+     *     "access_token": "...",
+     *     "token_type": "bearer",
+     *     "expires_in": 3600,
+     *     "session_id": "uuid",
+     *     "user": { ... }
+     *   }
+     * }
+     */
+    public function verifyTwoFactor(VerifyTwoFactorRequest $request): JsonResponse
+    {
+        $result = $this->authService->verifyTwoFactor(
+            $request->user_id,
+            $request->code,
+            $request->ip()
+        );
 
-        if (!$token = Auth::guard('api')->attempt($credentials)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Geçersiz kimlik bilgileri.',
-            ], 401);
-        }
+        $statusCode = match ($result['error'] ?? null) {
+            'user_not_found' => 404,
+            'expired' => 410,
+            'invalid_code' => 422,
+            'max_attempts', 'locked' => 423,
+            default => $result['success'] ? 200 : 400,
+        };
 
-        // Son giriş bilgisini güncelle
-        $user->updateLastLogin($request->ip());
+        return response()->json($result, $statusCode);
+    }
 
-        return $this->respondWithToken($token);
+    /**
+     * 2FA kodu yeniden gönder
+     * POST /api/auth/resend-2fa
+     */
+    public function resendTwoFactor(ResendTwoFactorRequest $request): JsonResponse
+    {
+        $result = $this->authService->resendTwoFactor($request->user_id);
+
+        $statusCode = match ($result['error'] ?? null) {
+            'user_not_found' => 404,
+            'locked' => 423,
+            'too_soon' => 429,
+            default => $result['success'] ? 200 : 400,
+        };
+
+        return response()->json($result, $statusCode);
     }
 
     /**
@@ -55,29 +109,28 @@ class AuthController extends Controller
      */
     public function logout(): JsonResponse
     {
-        Auth::guard('api')->logout();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Başarıyla çıkış yapıldı.',
-        ]);
+        $result = $this->authService->logout();
+        return response()->json($result);
     }
 
     /**
      * Token yenileme
      * POST /api/auth/refresh
      */
-    public function refresh(): JsonResponse
+    public function refresh(Request $request): JsonResponse
     {
-        try {
-            $token = Auth::guard('api')->refresh();
-            return $this->respondWithToken($token);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Token yenilenemedi. Lütfen tekrar giriş yapın.',
-            ], 401);
-        }
+        $sessionId = $request->header('X-Session-ID', '');
+
+        $result = $this->authService->refreshToken($sessionId);
+
+        $statusCode = match ($result['error'] ?? null) {
+            'unauthenticated' => 401,
+            'session_invalidated' => 401,
+            'refresh_failed' => 401,
+            default => $result['success'] ? 200 : 400,
+        };
+
+        return response()->json($result, $statusCode);
     }
 
     /**
@@ -88,27 +141,16 @@ class AuthController extends Controller
     {
         $user = Auth::guard('api')->user();
 
-        return response()->json([
-            'success' => true,
-            'data' => new PortalUserResource($user->load(['contact', 'company'])),
-        ]);
-    }
-
-    /**
-     * Token response oluştur
-     */
-    protected function respondWithToken(string $token): JsonResponse
-    {
-        $user = Auth::guard('api')->user();
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Oturum bulunamadı.',
+            ], 401);
+        }
 
         return response()->json([
             'success' => true,
-            'data' => [
-                'access_token' => $token,
-                'token_type' => 'bearer',
-                'expires_in' => Auth::guard('api')->factory()->getTTL() * 60,
-                'user' => new PortalUserResource($user->load(['contact', 'company'])),
-            ],
+            'data' => new UserResource($user->load(['company'])),
         ]);
     }
 }
