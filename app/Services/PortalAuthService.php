@@ -312,14 +312,28 @@ class PortalAuthService
      */
     protected function getUserData(User $user): array
     {
+        // Company ilişkisini yükle
+        $user->loadMissing('company');
+
         return [
             'id' => $user->id,
             'email' => $user->email,
+            'first_name' => $user->first_name,
+            'surname' => $user->surname,
             'name' => $user->full_name ?? $user->name,
             'company_id' => $user->company_id,
+            'contact_id' => $user->contact_id,
             'is_company_admin' => $user->is_company_admin ?? false,
             'portal_theme' => $user->portal_theme ?? 'light',
             'portal_language' => $user->portal_language ?? 'tr',
+            'company' => $user->company ? [
+                'id' => $user->company->id,
+                'name' => $user->company->name,
+                'tax_number' => $user->company->tax_number ?? null,
+                'phone' => $user->company->phone ?? null,
+                'email' => $user->company->email ?? null,
+                'address' => $user->company->address ?? null,
+            ] : null,
         ];
     }
 
