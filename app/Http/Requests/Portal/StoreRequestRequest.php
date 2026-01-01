@@ -46,6 +46,13 @@ class StoreRequestRequest extends FormRequest
             'meme_sayisi' => ['required', 'integer', 'min:1', 'max:256'],
             'meme_tipi' => ['required', 'string', 'in:' . $nozzleTypes],
 
+            // Sistem bilgileri
+            'sistem_tipi' => ['nullable', 'string', 'in:open_end,valvegate'],
+            'kontrol_cihazi_var_mi' => ['nullable', 'boolean'],
+            'bolge_sayisi' => ['nullable', 'integer', 'min:1', 'max:96'],
+            'yedek_parca_var_mi' => ['nullable', 'boolean'],
+            'yedek_parca_detay' => ['nullable', 'string', 'max:2000'],
+
             // Dosya yükleme - extension bazlı kontrol (CAD dosyaları için MIME tanınmıyor)
             'files' => ['nullable', 'array', 'max:10'],
             'files.*' => [

@@ -74,6 +74,18 @@ class RequestController extends Controller
                 ]);
 
                 // 2. Technical Data oluştur
+                // Ek bilgileri açıklama alanına ekle
+                $additionalInfo = [];
+                if ($request->sistem_tipi) {
+                    $additionalInfo[] = 'Sistem Tipi: ' . ($request->sistem_tipi === 'valvegate' ? 'Valvegate' : 'Açık Uçlu');
+                }
+                if ($request->kontrol_cihazi_var_mi) {
+                    $additionalInfo[] = 'Kontrol Cihazı: Evet' . ($request->bolge_sayisi ? ' (' . $request->bolge_sayisi . ' Bölge)' : '');
+                }
+                if ($request->yedek_parca_var_mi) {
+                    $additionalInfo[] = 'Yedek Parça: ' . ($request->yedek_parca_detay ?: 'Evet');
+                }
+
                 $technicalData = TechnicalData::create([
                     'job_id' => $job->id,
                     'teknik_data_tipi' => 0, // Sıcak Yolluk Sistem Satışı
@@ -89,6 +101,8 @@ class RequestController extends Controller
                     'kalip_parca_sayisi' => $request->goz_sayisi,
                     'meme_sayisi' => $request->meme_sayisi,
                     'tip_sekli' => $request->meme_tipi,
+                    'open_valve' => $request->sistem_tipi === 'valvegate',
+                    'aciklama' => !empty($additionalInfo) ? implode("\n", $additionalInfo) : null,
                     'is_active' => 1,
                 ]);
 
