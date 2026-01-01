@@ -86,4 +86,38 @@ class JobController extends Controller
             'data' => new JobResource($job),
         ]);
     }
+
+    /**
+     * İş detayı (ID ile)
+     * GET /api/jobs/by-id/{id}
+     */
+    public function showById(int $id): JsonResponse
+    {
+        $user = Auth::guard('api')->user();
+
+        $job = Job::with([
+            'technicalData',
+            'files' => function ($query) {
+                $query->active()->orderBy('created_at', 'desc');
+            },
+            'portalRequest.currentState',
+            'portalRequest.portalUser',
+            'portalRequest.stateLogs.state'
+        ])
+            ->forCompany($user->company_id)
+            ->where('id', $id)
+            ->first();
+
+        if (!$job) {
+            return response()->json([
+                'success' => false,
+                'message' => 'İş bulunamadı.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => new JobResource($job),
+        ]);
+    }
 }

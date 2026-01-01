@@ -116,6 +116,7 @@ Route::middleware(['portal.api-key', 'portal.log'])->group(function () {
         // Jobs - Firmaya ait işler
         Route::prefix('jobs')->group(function () {
             Route::get('/', [JobController::class, 'index']);
+            Route::get('/by-id/{id}', [JobController::class, 'showById'])->whereNumber('id');
             Route::get('/{jobNo}', [JobController::class, 'show']);
         });
 
