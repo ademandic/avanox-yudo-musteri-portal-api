@@ -15,6 +15,10 @@ class Job extends Model
 {
     protected $table = 'jobs';
 
+    // Kaynak sabitleri
+    const SOURCE_ERP = 1;
+    const SOURCE_PORTAL = 2;
+
     protected $fillable = [
         'job_no',
         'job_category_id',
@@ -40,10 +44,12 @@ class Job extends Model
         'related_service_id',
         'user_id',
         'is_active',
+        'source',
     ];
 
     protected $casts = [
         'is_active' => 'integer',
+        'source' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -115,5 +121,21 @@ class Job extends Model
               ->orWhere('final_customer_id', $companyId)
               ->orWhere('molder_t1_id', $companyId);
         });
+    }
+
+    /**
+     * Scope: Portal'dan oluşturulan işler
+     */
+    public function scopeFromPortal($query)
+    {
+        return $query->where('source', self::SOURCE_PORTAL);
+    }
+
+    /**
+     * Scope: ERP'den oluşturulan işler
+     */
+    public function scopeFromErp($query)
+    {
+        return $query->where('source', self::SOURCE_ERP);
     }
 }

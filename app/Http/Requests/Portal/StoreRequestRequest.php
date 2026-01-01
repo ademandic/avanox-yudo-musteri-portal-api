@@ -19,7 +19,7 @@ class StoreRequestRequest extends FormRequest
 
         return [
             // Talep bilgileri
-            'request_type' => ['required', 'integer', 'in:1,2'],
+            'request_type' => ['required', 'integer', 'in:1,2,3'],
             'customer_reference_code' => ['nullable', 'string', 'max:100'],
             'customer_mold_code' => ['nullable', 'string', 'max:100'],
             'customer_notes' => ['nullable', 'string', 'max:2000'],
@@ -41,8 +41,6 @@ class StoreRequestRequest extends FormRequest
             'kalip_y' => ['nullable', 'numeric', 'min:1', 'max:9999'],
             'kalip_d' => ['nullable', 'numeric', 'min:1', 'max:9999'],
             'kalip_l' => ['nullable', 'numeric', 'min:1', 'max:9999'],
-            'kalip_z' => ['nullable', 'numeric', 'min:1', 'max:9999'],
-
             // Meme bilgileri
             'goz_sayisi' => ['required', 'integer', 'min:1', 'max:256'],
             'meme_sayisi' => ['required', 'integer', 'min:1', 'max:256'],
@@ -130,7 +128,6 @@ class StoreRequestRequest extends FormRequest
             'kalip_y' => 'Kalıp Y',
             'kalip_d' => 'Kalıp D',
             'kalip_l' => 'Kalıp L',
-            'kalip_z' => 'Kalıp Z',
             'goz_sayisi' => 'Göz Sayısı',
             'meme_sayisi' => 'Meme Sayısı',
             'meme_tipi' => 'Meme Tipi',

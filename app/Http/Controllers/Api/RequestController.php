@@ -70,6 +70,7 @@ class RequestController extends Controller
                     'user_id' => $user->company->sales_person_id,
                     'aciklama' => "Portal üzerinden oluşturuldu.",
                     'is_active' => 1,
+                    'source' => Job::SOURCE_PORTAL,
                 ]);
 
                 // 2. Technical Data oluştur
@@ -97,13 +98,13 @@ class RequestController extends Controller
                     'portal_user_id' => $user->id,
                     'company_id' => $user->company_id,
                     'job_id' => $job->id,
+                    'technical_data_id' => $technicalData->id,
                     'request_type' => $request->request_type,
                     'customer_reference_code' => $request->customer_reference_code,
                     'customer_mold_code' => $request->customer_mold_code,
                     'customer_notes' => $request->customer_notes,
                     'expected_delivery_date' => $request->expected_delivery_date,
                     'priority' => $request->priority ?? 2,
-                    'kalip_z' => $request->kalip_z,
                     'current_state_id' => PortalRequestState::STATE_RECEIVED,
                     'is_active' => 1,
                 ]);
@@ -231,7 +232,6 @@ class RequestController extends Controller
                     'customer_notes',
                     'expected_delivery_date',
                     'priority',
-                    'kalip_z',
                 ]));
 
                 // Job güncelle

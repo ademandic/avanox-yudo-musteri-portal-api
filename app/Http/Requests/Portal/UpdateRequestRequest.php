@@ -40,7 +40,6 @@ class UpdateRequestRequest extends FormRequest
             'kalip_y' => ['nullable', 'numeric', 'min:1', 'max:9999'],
             'kalip_d' => ['nullable', 'numeric', 'min:1', 'max:9999'],
             'kalip_l' => ['nullable', 'numeric', 'min:1', 'max:9999'],
-            'kalip_z' => ['nullable', 'numeric', 'min:1', 'max:9999'],
 
             // Meme bilgileri
             'goz_sayisi' => ['nullable', 'integer', 'min:1', 'max:256'],

@@ -65,13 +65,31 @@ class JobResource extends JsonResource
                     'request_no' => $this->portalRequest->request_no,
                     'request_type' => $this->portalRequest->request_type,
                     'request_type_label' => $this->portalRequest->type_label,
+                    'customer_reference_code' => $this->portalRequest->customer_reference_code,
+                    'customer_mold_code' => $this->portalRequest->customer_mold_code,
+                    'customer_notes' => $this->portalRequest->customer_notes,
                     'priority' => $this->portalRequest->priority,
                     'priority_label' => $this->portalRequest->priority_label,
+                    'is_editable' => $this->portalRequest->isEditable(),
+                    'is_cancellable' => $this->portalRequest->isCancellable(),
                     'current_state' => $this->portalRequest->currentState ? [
                         'id' => $this->portalRequest->currentState->id,
                         'name' => $this->portalRequest->currentState->name,
                         'color_class' => $this->portalRequest->currentState->color_class,
                     ] : null,
+                    'state_logs' => $this->portalRequest->relationLoaded('stateLogs')
+                        ? $this->portalRequest->stateLogs->map(function ($log) {
+                            return [
+                                'id' => $log->id,
+                                'state' => $log->state ? [
+                                    'id' => $log->state->id,
+                                    'name' => $log->state->name,
+                                ] : null,
+                                'aciklama' => $log->aciklama,
+                                'created_at' => $log->created_at?->toISOString(),
+                            ];
+                        })
+                        : [],
                     'created_at' => $this->portalRequest->created_at?->toISOString(),
                 ] : null;
             }),

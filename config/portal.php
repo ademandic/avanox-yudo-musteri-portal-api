@@ -110,6 +110,7 @@ return [
     'request_types' => [
         1 => 'Tasarım Talebi',
         2 => 'Teklif Talebi',
+        3 => 'Tasarım + Teklif',
     ],
 
     /*

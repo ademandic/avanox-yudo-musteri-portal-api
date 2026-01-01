@@ -17,6 +17,7 @@ class PortalRequest extends Model
     // Talep tipleri
     const TYPE_DESIGN = 1;   // Tasarım Talebi
     const TYPE_OFFER = 2;    // Teklif Talebi
+    const TYPE_BOTH = 3;     // Tasarım + Teklif
 
     // Öncelik seviyeleri
     const PRIORITY_LOW = 1;
@@ -29,13 +30,14 @@ class PortalRequest extends Model
         'portal_user_id',
         'company_id',
         'job_id',
+        'technical_data_id',
         'request_type',
         'customer_reference_code',
         'customer_mold_code',
         'customer_notes',
+        'internal_notes',
         'expected_delivery_date',
         'priority',
-        'kalip_z',
         'current_state_id',
         'is_active',
     ];
@@ -43,7 +45,7 @@ class PortalRequest extends Model
     protected $casts = [
         'request_type' => 'integer',
         'priority' => 'integer',
-        'kalip_z' => 'decimal:2',
+        'technical_data_id' => 'integer',
         'expected_delivery_date' => 'date',
         'is_active' => 'boolean',
         'created_at' => 'datetime',
@@ -72,6 +74,14 @@ class PortalRequest extends Model
     public function job(): BelongsTo
     {
         return $this->belongsTo(Job::class);
+    }
+
+    /**
+     * İlişkili teknik veri
+     */
+    public function technicalData(): BelongsTo
+    {
+        return $this->belongsTo(TechnicalData::class);
     }
 
     /**
@@ -173,5 +183,13 @@ class PortalRequest extends Model
     public function scopeOfferRequests($query)
     {
         return $query->where('request_type', self::TYPE_OFFER);
+    }
+
+    /**
+     * Scope: Tasarım + Teklif talepleri
+     */
+    public function scopeBothRequests($query)
+    {
+        return $query->where('request_type', self::TYPE_BOTH);
     }
 }
