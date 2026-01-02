@@ -134,7 +134,7 @@ class RequestController extends Controller
                     TechnicalData::create([
                         'job_id' => $job->id,
                         'page' => $nextPage,
-                        'teknik_data_tipi' => 0,
+                        'teknik_data_tipi' => 1, // 1 = Kontrol Cihazı
                         'cihaz_tipi' => $request->cihaz_tipi,
                         'cihaz_bolg_sayisi' => $request->bolge_sayisi,
                         'soket_tipi' => $request->soket_tipi,
@@ -150,7 +150,7 @@ class RequestController extends Controller
                     TechnicalData::create([
                         'job_id' => $job->id,
                         'page' => $nextPage,
-                        'teknik_data_tipi' => 0,
+                        'teknik_data_tipi' => 2, // 2 = Yedek Parça
                         'aciklama' => $request->yedek_parca_detay,
                         'is_active' => 2,
                     ]);
