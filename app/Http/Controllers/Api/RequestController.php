@@ -138,6 +138,7 @@ class RequestController extends Controller
 
                 TechnicalDataSystem::create([
                     'technical_data_id' => $technicalData->id,
+                    'baski_no' => 1,
                     'parca_agirligi' => $request->parca_agirligi,
                     'et_kalinligi' => $request->et_kalinligi,
                     'malzeme' => $request->malzeme,
