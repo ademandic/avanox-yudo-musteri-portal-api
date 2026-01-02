@@ -35,6 +35,8 @@ class StoreRequestRequest extends FormRequest
             'katki_var_mi' => ['nullable', 'boolean'],
             'katki_turu' => ['nullable', 'required_if:katki_var_mi,true', 'string', 'in:' . $additives],
             'katki_orani' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'renk_degisimi' => ['nullable', 'string', 'in:Yes,No'],
+            'parca_gorselligi' => ['nullable', 'string', 'in:Yes,No'],
 
             // Kalıp bilgileri
             'kalip_x' => ['nullable', 'numeric', 'min:1', 'max:9999'],
