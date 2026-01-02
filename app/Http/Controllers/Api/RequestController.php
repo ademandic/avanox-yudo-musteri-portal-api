@@ -14,6 +14,7 @@ use App\Models\PortalRequest;
 use App\Models\PortalRequestState;
 use App\Models\PortalRequestStateLog;
 use App\Models\TechnicalData;
+use App\Models\TechnicalDataSystem;
 use App\Services\FileStorageService;
 use App\Services\JobNumberService;
 use App\Services\RequestNumberService;
@@ -127,11 +128,24 @@ class RequestController extends Controller
                     'is_active' => 2,
                 ]);
 
+                // Ana Sistem için TechnicalDataSystem kaydı
+                TechnicalDataSystem::create([
+                    'technical_data_id' => $technicalData->id,
+                    'parca_agirligi' => $request->parca_agirligi,
+                    'et_kalinligi' => $request->et_kalinligi,
+                    'malzeme' => $request->malzeme,
+                    'malzeme_katki' => $request->katki_var_mi ? $request->katki_turu : null,
+                    'malzeme_katki_yuzdesi' => $request->katki_orani,
+                    'meme_sayisi' => $request->meme_sayisi,
+                    'tip_sekli' => $request->meme_tipi,
+                    'open_valve' => $openValveValue,
+                ]);
+
                 $nextPage = 2;
 
                 // 3. Kontrol Cihazı TechnicalData (page = 2) - eğer talep edildiyse
                 if ($request->kontrol_cihazi_var_mi) {
-                    TechnicalData::create([
+                    $controllerTechnicalData = TechnicalData::create([
                         'job_id' => $job->id,
                         'page' => $nextPage,
                         'teknik_data_tipi' => 1, // 1 = Kontrol Cihazı
@@ -142,17 +156,29 @@ class RequestController extends Controller
                         'cihaz_kablo_uzunlugu' => $request->cihaz_kablo_uzunlugu,
                         'is_active' => 2,
                     ]);
+
+                    // Kontrol Cihazı için TechnicalDataSystem kaydı
+                    TechnicalDataSystem::create([
+                        'technical_data_id' => $controllerTechnicalData->id,
+                    ]);
+
                     $nextPage++;
                 }
 
                 // 4. Yedek Parça TechnicalData (page = 2 veya 3) - eğer talep edildiyse
                 if ($request->yedek_parca_var_mi) {
-                    TechnicalData::create([
+                    $sparePartsTechnicalData = TechnicalData::create([
                         'job_id' => $job->id,
                         'page' => $nextPage,
                         'teknik_data_tipi' => 2, // 2 = Yedek Parça
                         'aciklama' => $request->yedek_parca_detay,
                         'is_active' => 2,
+                    ]);
+
+                    // Yedek Parça için TechnicalDataSystem kaydı
+                    TechnicalDataSystem::create([
+                        'technical_data_id' => $sparePartsTechnicalData->id,
+                        'aciklama' => $request->yedek_parca_detay,
                     ]);
                 }
 
