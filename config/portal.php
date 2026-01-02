@@ -255,10 +255,12 @@ return [
     |--------------------------------------------------------------------------
     */
     'additives' => [
-        'glass_fiber' => 'Cam Elyaf',
-        'talc' => 'Talc',
-        'mineral' => 'Mineral',
-        'carbon_fiber' => 'Karbon Elyaf',
+        '0' => 'Seçilmedi',
+        'Calcite' => 'Calcite',
+        'Carbon Fiber' => 'Carbon Fiber',
+        'Glass Fiber' => 'Glass Fiber',
+        'Mineral' => 'Mineral',
+        'Naturel Fiber' => 'Naturel Fiber',
     ],
 
     /*
