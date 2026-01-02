@@ -57,12 +57,6 @@ class RequestController extends Controller
     {
         $user = Auth::guard('api')->user();
 
-        \Log::error('DEBUG RequestController::store - Request received', [
-            'user_id' => $user->id,
-            'company_id' => $user->company_id,
-            'all_data' => $request->all(),
-        ]);
-
         try {
             $result = DB::transaction(function () use ($request, $user) {
                 // 1. Job oluştur
@@ -79,21 +73,17 @@ class RequestController extends Controller
                     'source' => Job::SOURCE_PORTAL,
                 ]);
 
-                // 2. Technical Data oluştur
-                // Ek bilgileri açıklama alanına ekle
-                $additionalInfo = [];
-                if ($request->sistem_tipi) {
-                    $additionalInfo[] = 'Sistem Tipi: ' . ($request->sistem_tipi === 'valvegate' ? 'Valvegate' : 'Açık Uçlu');
-                }
-                if ($request->kontrol_cihazi_var_mi) {
-                    $additionalInfo[] = 'Kontrol Cihazı: Evet' . ($request->bolge_sayisi ? ' (' . $request->bolge_sayisi . ' Bölge)' : '');
-                }
-                if ($request->yedek_parca_var_mi) {
-                    $additionalInfo[] = 'Yedek Parça: ' . ($request->yedek_parca_detay ?: 'Evet');
+                // 2. Ana Sistem TechnicalData (page = 1)
+                $openValveValue = null;
+                if ($request->sistem_tipi === 'valvegate') {
+                    $openValveValue = 'valve';
+                } elseif ($request->sistem_tipi === 'open_end') {
+                    $openValveValue = 'open';
                 }
 
                 $technicalData = TechnicalData::create([
                     'job_id' => $job->id,
+                    'page' => 1,
                     'teknik_data_tipi' => 0, // Sıcak Yolluk Sistem Satışı
                     'parca_agirligi' => $request->parca_agirligi,
                     'et_kalinligi' => $request->et_kalinligi,
@@ -107,10 +97,40 @@ class RequestController extends Controller
                     'kalip_parca_sayisi' => $request->goz_sayisi,
                     'meme_sayisi' => $request->meme_sayisi,
                     'tip_sekli' => $request->meme_tipi,
-                    'open_valve' => $request->sistem_tipi === 'valvegate',
-                    'aciklama' => !empty($additionalInfo) ? implode("\n", $additionalInfo) : null,
-                    'is_active' => 1,
+                    'open_valve' => $openValveValue,
+                    'is_active' => 2,
                 ]);
+
+                $nextPage = 2;
+
+                // 3. Kontrol Cihazı TechnicalData (page = 2) - eğer talep edildiyse
+                if ($request->kontrol_cihazi_var_mi) {
+                    TechnicalData::create([
+                        'job_id' => $job->id,
+                        'page' => $nextPage,
+                        'teknik_data_tipi' => 0,
+                        'cihaz_tipi' => $request->cihaz_tipi,
+                        'cihaz_modeli' => $request->cihaz_modeli,
+                        'cihaz_bolg_sayisi' => $request->bolge_sayisi,
+                        'soket_tipi' => $request->soket_tipi,
+                        'soket_kitleme_tipi' => $request->soket_kitleme_tipi,
+                        'pim_baglanti_semasi' => $request->pim_baglanti_semasi,
+                        'cihaz_kablo_uzunlugu' => $request->cihaz_kablo_uzunlugu,
+                        'is_active' => 2,
+                    ]);
+                    $nextPage++;
+                }
+
+                // 4. Yedek Parça TechnicalData (page = 2 veya 3) - eğer talep edildiyse
+                if ($request->yedek_parca_var_mi) {
+                    TechnicalData::create([
+                        'job_id' => $job->id,
+                        'page' => $nextPage,
+                        'teknik_data_tipi' => 0,
+                        'aciklama' => $request->yedek_parca_detay,
+                        'is_active' => 2,
+                    ]);
+                }
 
                 // 3. Portal Request oluştur
                 $portalRequest = PortalRequest::create([

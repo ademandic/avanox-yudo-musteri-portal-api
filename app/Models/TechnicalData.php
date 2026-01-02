@@ -15,6 +15,7 @@ class TechnicalData extends Model
 
     protected $fillable = [
         'job_id',
+        'page',
         'teknik_data_tipi',
         'teknik_data_adi',
         'double_injection',
@@ -71,6 +72,14 @@ class TechnicalData extends Model
         'parca_agirligi',
         'et_kalinligi',
         'aciklama',
+        // Kontrol cihazı alanları
+        'cihaz_tipi',
+        'cihaz_modeli',
+        'cihaz_bolg_sayisi',
+        'soket_tipi',
+        'soket_kitleme_tipi',
+        'pim_baglanti_semasi',
+        'cihaz_kablo_uzunlugu',
         'is_active',
     ];
 
