@@ -63,6 +63,13 @@ class RequestController extends Controller
                 $jobNo = $this->jobNumberService->generate();
                 // Company tipine göre ilgili alanları belirle
                 $company = $user->company;
+
+                // Portal kullanıcısının email'i ile eşleşen contact'ı bul
+                $contact = \App\Models\Contact::where('company_id', $user->company_id)
+                    ->where('email', $user->email)
+                    ->first();
+                $contactId = $contact ? $contact->id : null;
+
                 $jobData = [
                     'job_no' => $jobNo,
                     'job_category_id' => 1, // System Sales
@@ -72,21 +79,21 @@ class RequestController extends Controller
                     'source' => Job::SOURCE_PORTAL,
                     // Her durumda final_customer doldurulur
                     'final_customer_id' => $user->company_id,
-                    'final_customer_contact_id' => $user->contact_id,
+                    'final_customer_contact_id' => $contactId,
                     'final_customer_ref_no' => $request->customer_reference_code,
                 ];
 
                 // is_molder = 1 ise molder alanlarını doldur
                 if ($company->is_molder == 1) {
                     $jobData['molder_id'] = $user->company_id;
-                    $jobData['molder_contact_id'] = $user->contact_id;
+                    $jobData['molder_contact_id'] = $contactId;
                     $jobData['molder_ref_no'] = $request->customer_reference_code;
                 }
 
                 // is_mold_maker = 1 ise mold_maker alanlarını doldur
                 if ($company->is_mold_maker == 1) {
                     $jobData['mold_maker_id'] = $user->company_id;
-                    $jobData['mold_maker_contact_id'] = $user->contact_id;
+                    $jobData['mold_maker_contact_id'] = $contactId;
                     $jobData['mold_maker_ref_no'] = $request->customer_reference_code;
                 }
 
