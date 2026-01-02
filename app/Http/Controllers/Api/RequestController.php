@@ -69,7 +69,7 @@ class RequestController extends Controller
                     'mold_maker_ref_no' => $request->customer_reference_code,
                     'user_id' => $user->company->sales_person_id,
                     'aciklama' => "Portal üzerinden oluşturuldu.",
-                    'is_active' => 1,
+                    'is_active' => 2, // 2 = aktif (ERP'de 1 = deaktif)
                     'source' => Job::SOURCE_PORTAL,
                 ]);
 
