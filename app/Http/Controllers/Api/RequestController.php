@@ -129,6 +129,13 @@ class RequestController extends Controller
                 ]);
 
                 // Ana Sistem için TechnicalDataSystem kaydı
+                $parcadaKonumu = null;
+                if ($request->meme_tipi === 'parca') {
+                    $parcadaKonumu = 'Parça üzerinde';
+                } elseif ($request->meme_tipi === 'yolluk') {
+                    $parcadaKonumu = 'Soğuk Yolluk Üzerinde';
+                }
+
                 TechnicalDataSystem::create([
                     'technical_data_id' => $technicalData->id,
                     'parca_agirligi' => $request->parca_agirligi,
@@ -137,7 +144,7 @@ class RequestController extends Controller
                     'malzeme_katki' => $request->katki_var_mi ? $request->katki_turu : null,
                     'malzeme_katki_yuzdesi' => $request->katki_orani,
                     'meme_sayisi' => $request->meme_sayisi,
-                    'tip_sekli' => $request->meme_tipi,
+                    'parcada_konumu' => $parcadaKonumu,
                     'open_valve' => $openValveValue,
                 ]);
 
