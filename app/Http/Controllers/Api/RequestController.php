@@ -61,17 +61,36 @@ class RequestController extends Controller
             $result = DB::transaction(function () use ($request, $user) {
                 // 1. Job oluştur
                 $jobNo = $this->jobNumberService->generate();
-                $job = Job::create([
+                // Company tipine göre ilgili alanları belirle
+                $company = $user->company;
+                $jobData = [
                     'job_no' => $jobNo,
                     'job_category_id' => 1, // System Sales
-                    'mold_maker_id' => $user->company_id,
-                    'mold_maker_contact_id' => $user->contact_id,
-                    'mold_maker_ref_no' => $request->customer_reference_code,
                     'user_id' => $user->id, // Talebi oluşturan kullanıcı
                     'aciklama' => "Portal üzerinden oluşturuldu.",
                     'is_active' => 2, // 2 = aktif (ERP'de 1 = deaktif)
                     'source' => Job::SOURCE_PORTAL,
-                ]);
+                    // Her durumda final_customer doldurulur
+                    'final_customer_id' => $user->company_id,
+                    'final_customer_contact_id' => $user->contact_id,
+                    'final_customer_ref_no' => $request->customer_reference_code,
+                ];
+
+                // is_molder = 1 ise molder alanlarını doldur
+                if ($company->is_molder == 1) {
+                    $jobData['molder_id'] = $user->company_id;
+                    $jobData['molder_contact_id'] = $user->contact_id;
+                    $jobData['molder_ref_no'] = $request->customer_reference_code;
+                }
+
+                // is_mold_maker = 1 ise mold_maker alanlarını doldur
+                if ($company->is_mold_maker == 1) {
+                    $jobData['mold_maker_id'] = $user->company_id;
+                    $jobData['mold_maker_contact_id'] = $user->contact_id;
+                    $jobData['mold_maker_ref_no'] = $request->customer_reference_code;
+                }
+
+                $job = Job::create($jobData);
 
                 // 2. Ana Sistem TechnicalData (page = 1)
                 $openValveValue = null;
