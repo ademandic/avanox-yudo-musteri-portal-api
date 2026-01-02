@@ -111,6 +111,8 @@ return [
         1 => 'Tasarım Talebi',
         2 => 'Teklif Talebi',
         3 => 'Tasarım + Teklif',
+        4 => 'Kontrol Cihazı Talebi',
+        5 => 'Yedek Parça Talebi',
     ],
 
     /*

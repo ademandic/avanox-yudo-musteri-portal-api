@@ -62,7 +62,6 @@ class RequestController extends Controller
             $result = DB::transaction(function () use ($request, $user) {
                 // 1. Job oluştur
                 $jobNo = $this->jobNumberService->generate();
-                // Company tipine göre ilgili alanları belirle
                 $company = $user->company;
 
                 // Portal kullanıcısının email'i ile eşleşen contact'ı bul
@@ -71,27 +70,31 @@ class RequestController extends Controller
                     ->first();
                 $contactId = $contact ? $contact->id : null;
 
+                // Job kategori belirleme
+                $jobCategoryId = match ((int) $request->request_type) {
+                    PortalRequest::TYPE_CONTROLLER => 2, // Controller Sales
+                    PortalRequest::TYPE_SPARE_PARTS => 3, // Spare Parts Sales
+                    default => 1, // System Sales
+                };
+
                 $jobData = [
                     'job_no' => $jobNo,
-                    'job_category_id' => 1, // System Sales
-                    'user_id' => $user->id, // Talebi oluşturan kullanıcı
+                    'job_category_id' => $jobCategoryId,
+                    'user_id' => $user->id,
                     'aciklama' => "Portal üzerinden oluşturuldu.",
-                    'is_active' => 2, // 2 = aktif (ERP'de 1 = deaktif)
+                    'is_active' => 2,
                     'source' => Job::SOURCE_PORTAL,
-                    // Her durumda final_customer doldurulur
                     'final_customer_id' => $user->company_id,
                     'final_customer_contact_id' => $contactId,
                     'final_customer_ref_no' => $request->customer_reference_code,
                 ];
 
-                // is_molder = 1 ise molder alanlarını doldur
                 if ($company->is_molder == 1) {
                     $jobData['molder_id'] = $user->company_id;
                     $jobData['molder_contact_id'] = $contactId;
                     $jobData['molder_ref_no'] = $request->customer_reference_code;
                 }
 
-                // is_mold_maker = 1 ise mold_maker alanlarını doldur
                 if ($company->is_mold_maker == 1) {
                     $jobData['mold_maker_id'] = $user->company_id;
                     $jobData['mold_maker_contact_id'] = $contactId;
@@ -100,87 +103,19 @@ class RequestController extends Controller
 
                 $job = Job::create($jobData);
 
-                // 2. Ana Sistem TechnicalData (page = 1)
-                $openValveValue = null;
-                if ($request->sistem_tipi === 'valvegate') {
-                    $openValveValue = 'valve';
-                } elseif ($request->sistem_tipi === 'open_end') {
-                    $openValveValue = 'open';
-                }
+                // 2. TechnicalData oluştur - request_type'a göre farklı akış
+                $requestType = (int) $request->request_type;
+                $technicalData = null;
 
-                $technicalData = TechnicalData::create([
-                    'job_id' => $job->id,
-                    'page' => 1,
-                    'teknik_data_tipi' => 0, // Sıcak Yolluk Sistem Satışı
-                    'parca_agirligi' => $request->parca_agirligi,
-                    'et_kalinligi' => $request->et_kalinligi,
-                    'malzeme' => $request->malzeme,
-                    'malzeme_katki' => $request->katki_var_mi ? $request->katki_turu : null,
-                    'malzeme_katki_yuzdesi' => $request->katki_orani,
-                    'renk_degisimi' => $request->renk_degisimi,
-                    'parca_gorselligi' => $request->parca_gorselligi,
-                    'kalip_x' => $request->kalip_x,
-                    'kalip_y' => $request->kalip_y,
-                    'kalip_d' => $request->kalip_d,
-                    'kalip_e' => $request->kalip_l,
-                    'kalip_parca_sayisi' => $request->goz_sayisi,
-                    'meme_sayisi' => $request->meme_sayisi,
-                    'tip_sekli' => $request->meme_tipi,
-                    'open_valve' => $openValveValue,
-                    'is_active' => 2,
-                ]);
-
-                // Ana Sistem için TechnicalDataSystem kaydı
-                $parcadaKonumu = null;
-                if ($request->meme_tipi === 'parca') {
-                    $parcadaKonumu = 'Parça üzerinde';
-                } elseif ($request->meme_tipi === 'yolluk') {
-                    $parcadaKonumu = 'Soğuk Yolluk Üzerinde';
-                }
-
-                TechnicalDataSystem::create([
-                    'technical_data_id' => $technicalData->id,
-                    'baski_no' => 1,
-                    'parca_agirligi' => $request->parca_agirligi,
-                    'et_kalinligi' => $request->et_kalinligi,
-                    'malzeme' => $request->malzeme,
-                    'malzeme_katki' => $request->katki_var_mi ? $request->katki_turu : null,
-                    'malzeme_katki_yuzdesi' => $request->katki_orani,
-                    'renk_degisimi' => $request->renk_degisimi,
-                    'parca_gorselligi' => $request->parca_gorselligi,
-                    'meme_sayisi' => $request->meme_sayisi,
-                    'parcada_konumu' => $parcadaKonumu,
-                    'open_valve' => $openValveValue,
-                ]);
-
-                $nextPage = 2;
-
-                // 3. Kontrol Cihazı TechnicalData (page = 2) - eğer talep edildiyse
-                if ($request->kontrol_cihazi_var_mi) {
-                    TechnicalData::create([
-                        'job_id' => $job->id,
-                        'page' => $nextPage,
-                        'teknik_data_tipi' => 1, // 1 = Kontrol Cihazı
-                        'cihaz_tipi' => $request->cihaz_tipi,
-                        'cihaz_bolg_sayisi' => $request->bolge_sayisi,
-                        'soket_tipi' => $request->soket_tipi,
-                        'pim_baglanti_semasi' => $request->pim_baglanti_semasi,
-                        'cihaz_kablo_uzunlugu' => $request->cihaz_kablo_uzunlugu,
-                        'is_active' => 2,
-                    ]);
-
-                    $nextPage++;
-                }
-
-                // 4. Yedek Parça TechnicalData (page = 2 veya 3) - eğer talep edildiyse
-                if ($request->yedek_parca_var_mi) {
-                    TechnicalData::create([
-                        'job_id' => $job->id,
-                        'page' => $nextPage,
-                        'teknik_data_tipi' => 2, // 2 = Yedek Parça
-                        'aciklama' => $request->yedek_parca_detay,
-                        'is_active' => 2,
-                    ]);
+                if (in_array($requestType, [PortalRequest::TYPE_DESIGN, PortalRequest::TYPE_OFFER, PortalRequest::TYPE_BOTH])) {
+                    // Sistem talepleri: Ana sistem + opsiyonel kontrol cihazı/yedek parça
+                    $technicalData = $this->createSystemTechnicalData($request, $job);
+                } elseif ($requestType === PortalRequest::TYPE_CONTROLLER) {
+                    // Sadece Kontrol Cihazı talebi
+                    $technicalData = $this->createControllerTechnicalData($request, $job);
+                } elseif ($requestType === PortalRequest::TYPE_SPARE_PARTS) {
+                    // Sadece Yedek Parça talebi
+                    $technicalData = $this->createSparePartsTechnicalData($request, $job);
                 }
 
                 // 3. Portal Request oluştur
@@ -260,6 +195,128 @@ class RequestController extends Controller
                 'error' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
+    }
+
+    /**
+     * Sistem talepleri için TechnicalData oluştur (Tasarım/Teklif/İkisi)
+     */
+    private function createSystemTechnicalData(StoreRequestRequest $request, Job $job): TechnicalData
+    {
+        $openValveValue = null;
+        if ($request->sistem_tipi === 'valvegate') {
+            $openValveValue = 'valve';
+        } elseif ($request->sistem_tipi === 'open_end') {
+            $openValveValue = 'open';
+        }
+
+        $technicalData = TechnicalData::create([
+            'job_id' => $job->id,
+            'page' => 1,
+            'teknik_data_tipi' => 0, // Sıcak Yolluk Sistem Satışı
+            'parca_agirligi' => $request->parca_agirligi,
+            'et_kalinligi' => $request->et_kalinligi,
+            'malzeme' => $request->malzeme,
+            'malzeme_katki' => $request->katki_var_mi ? $request->katki_turu : null,
+            'malzeme_katki_yuzdesi' => $request->katki_orani,
+            'renk_degisimi' => $request->renk_degisimi,
+            'parca_gorselligi' => $request->parca_gorselligi,
+            'kalip_x' => $request->kalip_x,
+            'kalip_y' => $request->kalip_y,
+            'kalip_d' => $request->kalip_d,
+            'kalip_e' => $request->kalip_l,
+            'kalip_parca_sayisi' => $request->goz_sayisi,
+            'meme_sayisi' => $request->meme_sayisi,
+            'tip_sekli' => $request->meme_tipi,
+            'open_valve' => $openValveValue,
+            'is_active' => 2,
+        ]);
+
+        // Ana Sistem için TechnicalDataSystem kaydı
+        $parcadaKonumu = null;
+        if ($request->meme_tipi === 'parca') {
+            $parcadaKonumu = 'Parça üzerinde';
+        } elseif ($request->meme_tipi === 'yolluk') {
+            $parcadaKonumu = 'Soğuk Yolluk Üzerinde';
+        }
+
+        TechnicalDataSystem::create([
+            'technical_data_id' => $technicalData->id,
+            'baski_no' => 1,
+            'parca_agirligi' => $request->parca_agirligi,
+            'et_kalinligi' => $request->et_kalinligi,
+            'malzeme' => $request->malzeme,
+            'malzeme_katki' => $request->katki_var_mi ? $request->katki_turu : null,
+            'malzeme_katki_yuzdesi' => $request->katki_orani,
+            'renk_degisimi' => $request->renk_degisimi,
+            'parca_gorselligi' => $request->parca_gorselligi,
+            'meme_sayisi' => $request->meme_sayisi,
+            'parcada_konumu' => $parcadaKonumu,
+            'open_valve' => $openValveValue,
+        ]);
+
+        $nextPage = 2;
+
+        // Opsiyonel Kontrol Cihazı
+        if ($request->kontrol_cihazi_var_mi) {
+            TechnicalData::create([
+                'job_id' => $job->id,
+                'page' => $nextPage,
+                'teknik_data_tipi' => 1,
+                'cihaz_tipi' => $request->cihaz_tipi,
+                'cihaz_bolg_sayisi' => $request->bolge_sayisi,
+                'soket_tipi' => $request->soket_tipi,
+                'pim_baglanti_semasi' => $request->pim_baglanti_semasi,
+                'cihaz_kablo_uzunlugu' => $request->cihaz_kablo_uzunlugu,
+                'is_active' => 2,
+            ]);
+            $nextPage++;
+        }
+
+        // Opsiyonel Yedek Parça
+        if ($request->yedek_parca_var_mi) {
+            TechnicalData::create([
+                'job_id' => $job->id,
+                'page' => $nextPage,
+                'teknik_data_tipi' => 2,
+                'aciklama' => $request->yedek_parca_detay,
+                'is_active' => 2,
+            ]);
+        }
+
+        return $technicalData;
+    }
+
+    /**
+     * Sadece Kontrol Cihazı talebi için TechnicalData oluştur
+     */
+    private function createControllerTechnicalData(StoreRequestRequest $request, Job $job): TechnicalData
+    {
+        return TechnicalData::create([
+            'job_id' => $job->id,
+            'page' => 1,
+            'teknik_data_tipi' => 1, // Kontrol Cihazı
+            'cihaz_tipi' => $request->cihaz_tipi,
+            'cihaz_bolg_sayisi' => $request->bolge_sayisi,
+            'soket_tipi' => $request->soket_tipi,
+            'pim_baglanti_semasi' => $request->pim_baglanti_semasi,
+            'cihaz_kablo_uzunlugu' => $request->cihaz_kablo_uzunlugu,
+            'aciklama' => $request->customer_notes,
+            'is_active' => 2,
+        ]);
+    }
+
+    /**
+     * Sadece Yedek Parça talebi için TechnicalData oluştur
+     */
+    private function createSparePartsTechnicalData(StoreRequestRequest $request, Job $job): TechnicalData
+    {
+        return TechnicalData::create([
+            'job_id' => $job->id,
+            'page' => 1,
+            'teknik_data_tipi' => 2, // Yedek Parça
+            'aciklama' => $request->yedek_parca_detay,
+            'is_active' => 2,
+        ]);
     }
 
     /**

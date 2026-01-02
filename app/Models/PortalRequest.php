@@ -15,9 +15,11 @@ class PortalRequest extends Model
     protected $table = 'portal_requests';
 
     // Talep tipleri
-    const TYPE_DESIGN = 1;   // Tasarım Talebi
-    const TYPE_OFFER = 2;    // Teklif Talebi
-    const TYPE_BOTH = 3;     // Tasarım + Teklif
+    const TYPE_DESIGN = 1;       // Tasarım Talebi
+    const TYPE_OFFER = 2;        // Teklif Talebi
+    const TYPE_BOTH = 3;         // Tasarım + Teklif
+    const TYPE_CONTROLLER = 4;   // Kontrol Cihazı Talebi
+    const TYPE_SPARE_PARTS = 5;  // Yedek Parça Talebi
 
     // Öncelik seviyeleri
     const PRIORITY_LOW = 1;

@@ -17,21 +17,26 @@ class StoreRequestRequest extends FormRequest
         $additives = implode(',', array_keys(config('portal.additives')));
         $nozzleTypes = implode(',', array_keys(config('portal.nozzle_types')));
 
+        $requestType = (int) $this->input('request_type');
+        $isSystemRequest = in_array($requestType, [1, 2, 3]); // Tasarım, Teklif, İkisi
+        $isControllerRequest = $requestType === 4; // Kontrol Cihazı
+        $isSparePartsRequest = $requestType === 5; // Yedek Parça
+
         return [
             // Talep bilgileri
-            'request_type' => ['required', 'integer', 'in:1,2,3'],
-            'customer_reference_code' => ['nullable', 'string', 'max:100'],
-            'customer_mold_code' => ['nullable', 'string', 'max:100'],
+            'request_type' => ['required', 'integer', 'in:1,2,3,4,5'],
+            'customer_reference_code' => ['required', 'string', 'max:100'],
+            'customer_mold_code' => ['required', 'string', 'max:100'],
             'customer_notes' => ['nullable', 'string', 'max:2000'],
             'expected_delivery_date' => ['nullable', 'date', 'after:today'],
             'priority' => ['nullable', 'integer', 'in:1,2,3,4'],
 
-            // Parça bilgileri
-            'parca_agirligi' => ['required', 'numeric', 'min:0.01', 'max:99999'],
-            'et_kalinligi' => ['required', 'numeric', 'min:0.1', 'max:100'],
+            // Parça bilgileri - Sadece sistem talepleri için zorunlu
+            'parca_agirligi' => [$isSystemRequest ? 'required' : 'nullable', 'numeric', 'min:0.01', 'max:99999'],
+            'et_kalinligi' => [$isSystemRequest ? 'required' : 'nullable', 'numeric', 'min:0.1', 'max:100'],
 
-            // Malzeme bilgileri
-            'malzeme' => ['required', 'string', 'in:' . $materials],
+            // Malzeme bilgileri - Sadece sistem talepleri için zorunlu
+            'malzeme' => [$isSystemRequest ? 'required' : 'nullable', 'string', 'in:' . $materials],
             'katki_var_mi' => ['nullable', 'boolean'],
             'katki_turu' => ['nullable', 'required_if:katki_var_mi,true', 'string', 'in:' . $additives],
             'katki_orani' => ['nullable', 'numeric', 'min:0', 'max:100'],
@@ -43,21 +48,22 @@ class StoreRequestRequest extends FormRequest
             'kalip_y' => ['nullable', 'numeric', 'min:1', 'max:9999'],
             'kalip_d' => ['nullable', 'numeric', 'min:1', 'max:9999'],
             'kalip_l' => ['nullable', 'numeric', 'min:1', 'max:9999'],
-            // Meme bilgileri
-            'goz_sayisi' => ['required', 'integer', 'min:1', 'max:256'],
-            'meme_sayisi' => ['required', 'integer', 'min:1', 'max:256'],
-            'meme_tipi' => ['required', 'string', 'in:' . $nozzleTypes],
+
+            // Meme bilgileri - Sadece sistem talepleri için zorunlu
+            'goz_sayisi' => [$isSystemRequest ? 'required' : 'nullable', 'integer', 'min:1', 'max:256'],
+            'meme_sayisi' => [$isSystemRequest ? 'required' : 'nullable', 'integer', 'min:1', 'max:256'],
+            'meme_tipi' => [$isSystemRequest ? 'required' : 'nullable', 'string', 'in:' . $nozzleTypes],
 
             // Sistem bilgileri
             'sistem_tipi' => ['nullable', 'string', 'in:open_end,valvegate'],
             'kontrol_cihazi_var_mi' => ['nullable', 'boolean'],
-            'bolge_sayisi' => ['nullable', 'integer', 'min:1', 'max:96'],
+            'bolge_sayisi' => [$isControllerRequest ? 'required' : 'nullable', 'integer', 'min:1', 'max:96'],
             'cihaz_tipi' => ['nullable', 'integer', 'in:1,2'],
             'soket_tipi' => ['nullable', 'integer'],
             'pim_baglanti_semasi' => ['nullable', 'integer'],
             'cihaz_kablo_uzunlugu' => ['nullable', 'numeric', 'min:0', 'max:99'],
             'yedek_parca_var_mi' => ['nullable', 'boolean'],
-            'yedek_parca_detay' => ['nullable', 'string', 'max:2000'],
+            'yedek_parca_detay' => [$isSparePartsRequest ? 'required' : 'nullable', 'string', 'max:2000'],
 
             // Dosya yükleme - extension bazlı kontrol (CAD dosyaları için MIME tanınmıyor)
             'files' => ['nullable', 'array', 'max:10'],
@@ -80,6 +86,12 @@ class StoreRequestRequest extends FormRequest
         return [
             'request_type.required' => 'Talep tipi seçilmelidir.',
             'request_type.in' => 'Geçersiz talep tipi.',
+
+            'customer_reference_code.required' => 'Müşteri referans kodu gereklidir.',
+            'customer_mold_code.required' => 'Kalıp kodu gereklidir.',
+
+            'bolge_sayisi.required' => 'Kontrol cihazı için bölge sayısı gereklidir.',
+            'yedek_parca_detay.required' => 'Yedek parça detayları gereklidir.',
 
             'parca_agirligi.required' => 'Parça ağırlığı gereklidir.',
             'parca_agirligi.numeric' => 'Parça ağırlığı sayısal olmalıdır.',
