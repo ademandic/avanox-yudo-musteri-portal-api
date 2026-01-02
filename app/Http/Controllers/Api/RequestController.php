@@ -145,7 +145,7 @@ class RequestController extends Controller
 
                 // 3. Kontrol Cihazı TechnicalData (page = 2) - eğer talep edildiyse
                 if ($request->kontrol_cihazi_var_mi) {
-                    $controllerTechnicalData = TechnicalData::create([
+                    TechnicalData::create([
                         'job_id' => $job->id,
                         'page' => $nextPage,
                         'teknik_data_tipi' => 1, // 1 = Kontrol Cihazı
@@ -157,28 +157,17 @@ class RequestController extends Controller
                         'is_active' => 2,
                     ]);
 
-                    // Kontrol Cihazı için TechnicalDataSystem kaydı
-                    TechnicalDataSystem::create([
-                        'technical_data_id' => $controllerTechnicalData->id,
-                    ]);
-
                     $nextPage++;
                 }
 
                 // 4. Yedek Parça TechnicalData (page = 2 veya 3) - eğer talep edildiyse
                 if ($request->yedek_parca_var_mi) {
-                    $sparePartsTechnicalData = TechnicalData::create([
+                    TechnicalData::create([
                         'job_id' => $job->id,
                         'page' => $nextPage,
                         'teknik_data_tipi' => 2, // 2 = Yedek Parça
                         'aciklama' => $request->yedek_parca_detay,
                         'is_active' => 2,
-                    ]);
-
-                    // Yedek Parça için TechnicalDataSystem kaydı
-                    TechnicalDataSystem::create([
-                        'technical_data_id' => $sparePartsTechnicalData->id,
-                        'aciklama' => $request->yedek_parca_detay,
                     ]);
                 }
 
