@@ -266,11 +266,13 @@ class RequestController extends Controller
             'open_valve' => $openValveValue,
         ]);
 
+        $nextPage = 2;
+
         // Opsiyonel Kontrol Cihazı
         if ($request->kontrol_cihazi_var_mi) {
             TechnicalData::create([
                 'job_id' => $job->id,
-                'page' => 1,
+                'page' => $nextPage,
                 'teknik_data_tipi' => 1,
                 'cihaz_tipi' => $request->cihaz_tipi,
                 'cihaz_bolg_sayisi' => $request->bolge_sayisi,
@@ -279,13 +281,14 @@ class RequestController extends Controller
                 'cihaz_kablo_uzunlugu' => $request->cihaz_kablo_uzunlugu,
                 'is_active' => 2,
             ]);
+            $nextPage++;
         }
 
         // Opsiyonel Yedek Parça
         if ($request->yedek_parca_var_mi) {
             TechnicalData::create([
                 'job_id' => $job->id,
-                'page' => 1,
+                'page' => $nextPage,
                 'teknik_data_tipi' => 2,
                 'aciklama' => $request->yedek_parca_detay,
                 'is_active' => 2,
@@ -302,7 +305,7 @@ class RequestController extends Controller
     {
         return TechnicalData::create([
             'job_id' => $job->id,
-            'page' => 1,
+            'page' => 2,
             'teknik_data_tipi' => 1, // Kontrol Cihazı
             'cihaz_tipi' => $request->cihaz_tipi,
             'cihaz_bolg_sayisi' => $request->bolge_sayisi,
@@ -321,7 +324,7 @@ class RequestController extends Controller
     {
         return TechnicalData::create([
             'job_id' => $job->id,
-            'page' => 1,
+            'page' => 2,
             'teknik_data_tipi' => 2, // Yedek Parça
             'aciklama' => $request->yedek_parca_detay,
             'is_active' => 2,
