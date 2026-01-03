@@ -491,10 +491,12 @@ class RequestController extends Controller
 
         try {
             DB::transaction(function () use ($portalRequest, $user) {
+                // Portal request durumunu iptal olarak güncelle
                 $portalRequest->update([
                     'current_state_id' => PortalRequestState::STATE_CANCELLED,
                 ]);
 
+                // State log kaydı oluştur
                 PortalRequestStateLog::create([
                     'portal_request_id' => $portalRequest->id,
                     'portal_request_state_id' => PortalRequestState::STATE_CANCELLED,
@@ -502,6 +504,16 @@ class RequestController extends Controller
                     'changed_by_portal_user_id' => $user->id,
                     'is_active' => 1,
                 ]);
+
+                // İlişkili job'u pasif yap
+                if ($portalRequest->job) {
+                    $portalRequest->job->update(['is_active' => 0]);
+
+                    // İlişkili technical_data'yı pasif yap
+                    if ($portalRequest->job->technicalData) {
+                        $portalRequest->job->technicalData->update(['is_active' => 0]);
+                    }
+                }
             });
 
             return response()->json([
