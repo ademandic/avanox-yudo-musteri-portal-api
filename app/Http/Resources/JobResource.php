@@ -50,7 +50,29 @@ class JobResource extends JsonResource
                     'parcada_konumu_2' => $td->parcada_konumu_2,
                     'double_injection' => (bool) $td->double_injection,
                     'parca_gorselligi' => $td->parca_gorselligi,
+                    // Drawing state logs (ERP)
+                    'drawing_state_logs' => $td->relationLoaded('drawingStateLogs')
+                        ? DrawingStateLogResource::collection($td->drawingStateLogs)
+                        : [],
                 ] : null;
+            }),
+
+            // Job state logs (ERP)
+            'state_logs' => $this->relationLoaded('stateLogs')
+                ? JobStateLogResource::collection($this->stateLogs)
+                : [],
+
+            // Offers with state logs (ERP)
+            'offers' => $this->whenLoaded('offers', function () {
+                return $this->offers->map(function ($offer) {
+                    return [
+                        'id' => $offer->id,
+                        'offer_no' => $offer->offer_no ?? null,
+                        'state_logs' => $offer->relationLoaded('stateLogs')
+                            ? OfferStateLogResource::collection($offer->stateLogs)
+                            : [],
+                    ];
+                });
             }),
 
             // Dosyalar

@@ -96,9 +96,22 @@ class JobController extends Controller
         $user = Auth::guard('api')->user();
 
         $job = Job::with([
-            'technicalData',
+            'technicalData.drawingStateLogs' => function ($query) {
+                $query->whereIn('drawing_state_id', \App\Models\DrawingState::PORTAL_VISIBLE_STATES)
+                    ->with('state')
+                    ->orderBy('tarih_saat', 'desc');
+            },
             'files' => function ($query) {
                 $query->active()->orderBy('created_at', 'desc');
+            },
+            'stateLogs' => function ($query) {
+                $query->with('state')
+                    ->orderBy('created_at', 'desc');
+            },
+            'offers.stateLogs' => function ($query) {
+                $query->whereIn('offer_states_id', \App\Models\OfferState::PORTAL_VISIBLE_STATES)
+                    ->with('state')
+                    ->orderBy('tarih_saat', 'desc');
             },
             'portalRequest.currentState',
             'portalRequest.portalUser',
