@@ -80,11 +80,11 @@ class Job extends Model
     }
 
     /**
-     * Teknik veriler
+     * Teknik veriler (Ana sistem - Sıcak Yolluk)
      */
     public function technicalData(): HasOne
     {
-        return $this->hasOne(TechnicalData::class);
+        return $this->hasOne(TechnicalData::class)->where('teknik_data_tipi', 0);
     }
 
     /**
