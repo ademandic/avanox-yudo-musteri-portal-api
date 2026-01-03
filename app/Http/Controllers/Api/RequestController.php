@@ -204,9 +204,9 @@ class RequestController extends Controller
     {
         $openValveValue = null;
         if ($request->sistem_tipi === 'valvegate') {
-            $openValveValue = 'valve';
+            $openValveValue = 'VALVE';
         } elseif ($request->sistem_tipi === 'open_end') {
-            $openValveValue = 'open';
+            $openValveValue = 'OPEN';
         }
 
         $technicalData = TechnicalData::create([
