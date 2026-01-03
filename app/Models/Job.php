@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 /**
  * ERP Job Model - READ + INSERT
@@ -100,6 +101,22 @@ class Job extends Model
     public function portalRequest(): HasOne
     {
         return $this->hasOne(PortalRequest::class);
+    }
+
+    /**
+     * Job state logları (ERP state sistemi)
+     */
+    public function stateLogs(): HasMany
+    {
+        return $this->hasMany(JobStateLog::class);
+    }
+
+    /**
+     * Teklifler (ERP tarafından oluşturulur)
+     */
+    public function offers(): HasMany
+    {
+        return $this->hasMany(Offer::class);
     }
 
     /**

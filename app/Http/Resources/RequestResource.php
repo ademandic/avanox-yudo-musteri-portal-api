@@ -58,6 +58,7 @@ class RequestResource extends JsonResource
                     'technical_data' => $this->when($this->job->relationLoaded('technicalData'), function () {
                         $td = $this->job->technicalData;
                         return $td ? [
+                            'id' => $td->id,
                             'parca_agirligi' => $td->parca_agirligi,
                             'et_kalinligi' => $td->et_kalinligi,
                             'malzeme' => $td->malzeme,
@@ -70,12 +71,35 @@ class RequestResource extends JsonResource
                             'kalip_parca_sayisi' => $td->kalip_parca_sayisi,
                             'meme_sayisi' => $td->meme_sayisi,
                             'tip_sekli' => $td->tip_sekli,
+                            // Tasarım durumu geçmişi (ERP)
+                            'drawing_state_logs' => $this->when(
+                                $td->relationLoaded('drawingStateLogs'),
+                                fn() => DrawingStateLogResource::collection($td->drawingStateLogs)
+                            ),
                         ] : null;
                     }),
 
                     // Dosyalar
                     'files' => $this->when($this->job->relationLoaded('files'), function () {
                         return FileResource::collection($this->job->files);
+                    }),
+
+                    // Teklifler ve durumları (ERP)
+                    'offers' => $this->when($this->job->relationLoaded('offers'), function () {
+                        return $this->job->offers->map(function ($offer) {
+                            return [
+                                'id' => $offer->id,
+                                'offer_no' => $offer->offer_no ?? null,
+                                'state_logs' => $offer->relationLoaded('stateLogs')
+                                    ? OfferStateLogResource::collection($offer->stateLogs)
+                                    : [],
+                            ];
+                        });
+                    }),
+
+                    // Job state logları (ERP)
+                    'job_state_logs' => $this->when($this->job->relationLoaded('stateLogs'), function () {
+                        return JobStateLogResource::collection($this->job->stateLogs);
                     }),
                 ];
             }),

@@ -10,6 +10,7 @@ use App\Http\Resources\RequestCollection;
 use App\Http\Resources\StateLogResource;
 use App\Models\ErpFile;
 use App\Models\Job;
+use App\Models\JobStateLog;
 use App\Models\PortalRequest;
 use App\Models\PortalRequestState;
 use App\Models\PortalRequestStateLog;
@@ -164,7 +165,7 @@ class RequestController extends Controller
                     }
                 }
 
-                // 5. İlk durum logu ekle
+                // 5. İlk durum logu ekle (Portal state)
                 PortalRequestStateLog::create([
                     'portal_request_id' => $portalRequest->id,
                     'portal_request_state_id' => PortalRequestState::STATE_RECEIVED,
@@ -172,6 +173,13 @@ class RequestController extends Controller
                     'changed_by_portal_user_id' => $user->id,
                     'is_active' => 1,
                 ]);
+
+                // 6. ERP Job State log ekle
+                JobStateLog::logPortalRequestReceived(
+                    $job->id,
+                    $user->id,
+                    "Portal - Talep No: {$portalRequest->request_no}"
+                );
 
                 return $portalRequest;
             });
@@ -327,7 +335,26 @@ class RequestController extends Controller
     {
         $user = Auth::guard('api')->user();
 
-        $portalRequest = PortalRequest::with(['job.technicalData', 'job.files', 'currentState', 'stateLogs.state', 'portalUser.contact'])
+        $portalRequest = PortalRequest::with([
+            'job.technicalData.drawingStateLogs' => function ($query) {
+                $query->whereIn('drawing_state_id', \App\Models\DrawingState::PORTAL_VISIBLE_STATES)
+                    ->with('state')
+                    ->orderBy('tarih_saat', 'desc');
+            },
+            'job.offers.stateLogs' => function ($query) {
+                $query->whereIn('offer_states_id', \App\Models\OfferState::PORTAL_VISIBLE_STATES)
+                    ->with('state')
+                    ->orderBy('tarih_saat', 'desc');
+            },
+            'job.stateLogs' => function ($query) {
+                $query->with('state')
+                    ->orderBy('created_at', 'desc');
+            },
+            'job.files',
+            'currentState',
+            'stateLogs.state',
+            'portalUser.contact'
+        ])
             ->forCompany($user->company_id)
             ->active()
             ->find($id);

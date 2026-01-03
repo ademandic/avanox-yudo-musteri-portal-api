@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * ERP TechnicalData Model - READ + INSERT
@@ -111,10 +112,47 @@ class TechnicalData extends Model
     }
 
     /**
+     * Drawing state logları (ERP tarafından oluşturulur)
+     */
+    public function drawingStateLogs(): HasMany
+    {
+        return $this->hasMany(DrawingStateLog::class);
+    }
+
+    /**
+     * Portal'da görünecek drawing state logları
+     */
+    public function portalVisibleDrawingStateLogs(): HasMany
+    {
+        return $this->hasMany(DrawingStateLog::class)
+            ->whereIn('drawing_state_id', DrawingState::PORTAL_VISIBLE_STATES)
+            ->orderBy('tarih_saat', 'desc');
+    }
+
+    /**
+     * Son drawing state
+     */
+    public function latestDrawingState(): ?DrawingStateLog
+    {
+        return $this->drawingStateLogs()
+            ->portalVisible()
+            ->latestFirst()
+            ->first();
+    }
+
+    /**
      * Scope: Sadece aktif kayıtlar
      */
     public function scopeActive($query)
     {
         return $query->where('is_active', 1);
+    }
+
+    /**
+     * Scope: Ana sistem (page = 1)
+     */
+    public function scopeMainSystem($query)
+    {
+        return $query->where('page', 1);
     }
 }
