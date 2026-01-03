@@ -370,6 +370,16 @@ class RequestController extends Controller
             ], 404);
         }
 
+        // DEBUG: Job state logs kontrolü
+        \Log::info('RequestController::show - Job State Logs Debug', [
+            'request_id' => $id,
+            'job_id' => $portalRequest->job?->id,
+            'job_loaded' => $portalRequest->relationLoaded('job'),
+            'stateLogs_loaded' => $portalRequest->job?->relationLoaded('stateLogs'),
+            'stateLogs_count' => $portalRequest->job?->stateLogs?->count(),
+            'stateLogs_data' => $portalRequest->job?->stateLogs?->toArray(),
+        ]);
+
         return response()->json([
             'success' => true,
             'data' => new RequestResource($portalRequest),
