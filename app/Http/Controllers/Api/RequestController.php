@@ -187,7 +187,11 @@ class RequestController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Talep başarıyla oluşturuldu.',
-                'data' => new RequestResource($result->load(['job.files', 'currentState'])),
+                'data' => new RequestResource($result->load([
+                    'job.files',
+                    'job.stateLogs.state',
+                    'currentState'
+                ])),
             ], 201);
 
         } catch (\Exception $e) {

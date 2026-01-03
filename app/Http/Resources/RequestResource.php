@@ -97,10 +97,10 @@ class RequestResource extends JsonResource
                         });
                     }),
 
-                    // Job state logları (ERP)
-                    'job_state_logs' => $this->when($this->job->relationLoaded('stateLogs'), function () {
-                        return JobStateLogResource::collection($this->job->stateLogs);
-                    }),
+                    // Job state logları (ERP) - Her zaman döndür
+                    'job_state_logs' => $this->job->relationLoaded('stateLogs')
+                        ? JobStateLogResource::collection($this->job->stateLogs)
+                        : [],
                 ];
             }),
 
