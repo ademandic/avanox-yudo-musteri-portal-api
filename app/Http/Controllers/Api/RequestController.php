@@ -337,6 +337,8 @@ class RequestController extends Controller
      */
     public function show(int $id): JsonResponse
     {
+        \Log::info('RequestController::show - CALLED', ['id' => $id]);
+
         $user = Auth::guard('api')->user();
 
         $portalRequest = PortalRequest::with([
