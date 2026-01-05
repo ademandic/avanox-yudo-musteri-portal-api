@@ -17,6 +17,13 @@ class StoreRequestRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
+        // DEBUG: Log received cihaz_tipi value
+        \Log::info('StoreRequestRequest - cihaz_tipi debug', [
+            'raw_value' => $this->input('cihaz_tipi'),
+            'type' => gettype($this->input('cihaz_tipi')),
+            'all_inputs' => array_intersect_key($this->all(), array_flip(['cihaz_tipi', 'soket_tipi', 'bolge_sayisi', 'request_type'])),
+        ]);
+
         $nullableFields = [
             'cihaz_tipi',
             'soket_tipi',
