@@ -70,10 +70,19 @@ class StoreRequestRequest extends FormRequest
             'parca_gorselligi' => ['nullable', 'string', 'in:Yes,No'],
 
             // Kalıp bilgileri
-            'kalip_x' => ['nullable', 'numeric', 'min:1', 'max:9999'],
-            'kalip_y' => ['nullable', 'numeric', 'min:1', 'max:9999'],
-            'kalip_d' => ['nullable', 'numeric', 'min:1', 'max:9999'],
-            'kalip_l' => ['nullable', 'numeric', 'min:1', 'max:9999'],
+            'kalip_x' => ['nullable', 'numeric'],
+            'kalip_y' => ['nullable', 'numeric'],
+            'kalip_d' => ['nullable', 'numeric', 'min:0', 'max:9999'],
+            'kalip_e' => ['nullable', 'numeric', 'min:0', 'max:9999'],
+            'kalip_ct' => ['nullable', 'numeric', 'min:0', 'max:9999'],
+            'kalip_st' => ['nullable', 'numeric', 'min:0', 'max:9999'],
+            'kalip_ht' => ['nullable', 'numeric', 'min:0', 'max:9999'],
+            'kalip_en' => ['nullable', 'numeric', 'min:0', 'max:9999'],
+            'kalip_boy' => ['nullable', 'numeric', 'min:0', 'max:9999'],
+            'double_injection' => ['nullable', 'integer', 'in:1,2'],
+            'ikinci_enj_yandan_mi' => ['nullable', 'integer', 'in:0,1'],
+            'blue_id_var_mi' => ['nullable', 'integer', 'in:0,1'],
+            'blue_id_nereye' => ['nullable', 'string', 'max:10'],
 
             // Meme bilgileri - Sadece sistem talepleri için zorunlu
             'goz_sayisi' => [$isSystemRequest ? 'required' : 'nullable', 'integer', 'min:1', 'max:256'],
