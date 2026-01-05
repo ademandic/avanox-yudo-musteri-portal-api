@@ -11,6 +11,32 @@ class StoreRequestRequest extends FormRequest
         return true;
     }
 
+    /**
+     * Prepare the data for validation.
+     * Convert empty strings to null for optional integer fields.
+     */
+    protected function prepareForValidation(): void
+    {
+        $nullableFields = [
+            'cihaz_tipi',
+            'soket_tipi',
+            'pim_baglanti_semasi',
+            'bolge_sayisi',
+            'cihaz_kablo_uzunlugu',
+        ];
+
+        $data = [];
+        foreach ($nullableFields as $field) {
+            if ($this->has($field) && $this->input($field) === '') {
+                $data[$field] = null;
+            }
+        }
+
+        if (!empty($data)) {
+            $this->merge($data);
+        }
+    }
+
     public function rules(): array
     {
         $materials = implode(',', array_keys(config('portal.materials')));
