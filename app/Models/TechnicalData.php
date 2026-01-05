@@ -20,6 +20,7 @@ class TechnicalData extends Model
         'teknik_data_tipi',
         'teknik_data_adi',
         'double_injection',
+        'renk_degisimi',
         'parca_gorselligi',
         'resim_ilgilileri',
         'resim_bilgi',
