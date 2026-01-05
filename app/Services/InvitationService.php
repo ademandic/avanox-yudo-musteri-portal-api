@@ -227,6 +227,73 @@ class InvitationService
     }
 
     /**
+     * ERP'den davetiye oluştur
+     * ERP sisteminden portal'a kullanıcı davet etmek için kullanılır.
+     */
+    public function createFromErp(
+        int $companyId,
+        string $email,
+        string $firstName,
+        string $lastName,
+        ?int $contactId = null,
+        string $roleName = 'Portal User'
+    ): PortalInvitation {
+        $config = config('portal.invitation');
+
+        // Aynı email için bekleyen davet var mı?
+        $existingInvitation = PortalInvitation::where('email', $email)
+            ->pending()
+            ->first();
+
+        if ($existingInvitation && $existingInvitation->isValid()) {
+            throw new \Exception('Bu email için zaten bekleyen bir davetiye mevcut.');
+        }
+
+        // Zaten kayıtlı bir portal kullanıcısı var mı?
+        $existingUser = User::where('email', $email)
+            ->where('is_portal_user', true)
+            ->first();
+
+        if ($existingUser) {
+            throw new \Exception('Bu email adresi ile kayıtlı bir kullanıcı zaten mevcut.');
+        }
+
+        // Davetiye oluştur
+        $invitation = PortalInvitation::create([
+            'contact_id' => $contactId,
+            'company_id' => $companyId,
+            'email' => $email,
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'token' => $this->generateToken($config['token_length']),
+            'invited_by_user_id' => null,
+            'invited_by_portal_user_id' => null,
+            'invited_from_erp' => true,
+            'role_name' => $roleName,
+            'sent_at' => now(),
+            'expires_at' => now()->addDays($config['expires_in_days']),
+            'status' => PortalInvitation::STATUS_PENDING,
+            'is_active' => true,
+        ]);
+
+        // Davetiye emaili gönder
+        $this->sendInvitationEmail($invitation);
+
+        return $invitation;
+    }
+
+    /**
+     * Davetiye emaili gönder
+     */
+    protected function sendInvitationEmail(PortalInvitation $invitation): void
+    {
+        $portalUrl = config('portal.frontend_url', 'https://portal.yudo.com.tr');
+        $inviteUrl = $portalUrl . '/davet/' . $invitation->token;
+
+        Mail::to($invitation->email)->send(new \App\Mail\PortalInvitationMail($invitation, $inviteUrl));
+    }
+
+    /**
      * Direkt kullanıcı oluştur (davetiye olmadan)
      * Portal Admin tarafından kullanılır.
      */

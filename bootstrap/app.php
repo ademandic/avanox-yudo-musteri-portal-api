@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'portal.log' => \App\Http\Middleware\LogApiRequests::class,
             'session.timeout' => \App\Http\Middleware\CheckSessionTimeout::class,
             'single.session' => \App\Http\Middleware\CheckSingleSession::class,
+            'erp.api-key' => \App\Http\Middleware\ValidateErpApiKey::class,
         ]);
 
         // API için login redirect yerine JSON 401 dön

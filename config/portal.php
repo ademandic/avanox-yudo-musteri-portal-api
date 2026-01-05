@@ -8,6 +8,12 @@ return [
     */
     'api_key' => env('PORTAL_API_KEY'),
 
+    // ERP API Key (ERP sisteminden erişim için)
+    'erp_api_key' => env('ERP_API_KEY'),
+
+    // Frontend URL (davetiye linkleri için)
+    'frontend_url' => env('PORTAL_FRONTEND_URL', 'https://portal.yudo.com.tr'),
+
     'allowed_ips' => array_filter(
         explode(',', env('PORTAL_ALLOWED_IPS', ''))
     ),

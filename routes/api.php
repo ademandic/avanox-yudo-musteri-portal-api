@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CompanyController;
+use App\Http\Controllers\Api\ErpController;
 use App\Http\Controllers\Api\FileController;
 use App\Http\Controllers\Api\InvitationController;
 use App\Http\Controllers\Api\JobController;
@@ -162,4 +163,19 @@ Route::middleware(['portal.api-key', 'portal.log'])->group(function () {
             Route::put('/force-change-password', [SettingsController::class, 'forceChangePassword']); // İlk giriş şifre değiştirme
         });
     });
+});
+
+/*
+|--------------------------------------------------------------------------
+| ERP Integration Routes
+|--------------------------------------------------------------------------
+| ERP sisteminden erişilebilen API endpoint'leri.
+| X-Erp-Api-Key header'ı ile kimlik doğrulaması yapılır.
+*/
+Route::middleware(['erp.api-key'])->prefix('erp')->group(function () {
+    // Portal davetiyesi gönder
+    Route::post('/invitations', [ErpController::class, 'sendInvitation']);
+
+    // Firma için portal kullanıcılarını listele
+    Route::get('/portal-users', [ErpController::class, 'getPortalUsers']);
 });
