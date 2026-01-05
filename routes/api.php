@@ -145,7 +145,8 @@ Route::middleware(['portal.api-key', 'portal.log'])->group(function () {
         // User Management routes (Company Admin only)
         Route::prefix('users')->group(function () {
             Route::get('/', [UserController::class, 'index']);
-            Route::post('/invite', [UserController::class, 'invite']);
+            Route::post('/create', [UserController::class, 'create']); // Direkt kullanıcı oluşturma
+            Route::post('/invite', [UserController::class, 'invite']); // Davetiye ile kullanıcı oluşturma (eski sistem)
             Route::post('/{id}/toggle-status', [UserController::class, 'toggleStatus'])->where('id', '[0-9]+');
             Route::delete('/{id}', [UserController::class, 'destroy'])->where('id', '[0-9]+');
             Route::delete('/invitations/{id}', [UserController::class, 'cancelInvitation'])->where('id', '[0-9]+');
@@ -158,6 +159,7 @@ Route::middleware(['portal.api-key', 'portal.log'])->group(function () {
             Route::put('/language', [SettingsController::class, 'updateLanguage']);
             Route::put('/profile', [SettingsController::class, 'updateProfile']);
             Route::put('/password', [SettingsController::class, 'updatePassword']);
+            Route::put('/force-change-password', [SettingsController::class, 'forceChangePassword']); // İlk giriş şifre değiştirme
         });
     });
 });

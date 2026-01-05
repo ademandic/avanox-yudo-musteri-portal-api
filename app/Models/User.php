@@ -39,6 +39,7 @@ class User extends Authenticatable implements JWTSubject
         'contact_id',
         'is_company_admin',
         'is_active',
+        'must_change_password',
         'password',
 
         // 2FA alanları
@@ -71,6 +72,7 @@ class User extends Authenticatable implements JWTSubject
         'is_portal_user' => 'boolean',
         'is_company_admin' => 'boolean',
         'is_active' => 'boolean',
+        'must_change_password' => 'boolean',
         'company_id' => 'integer',
         'contact_id' => 'integer',
         'two_factor_expires_at' => 'datetime',

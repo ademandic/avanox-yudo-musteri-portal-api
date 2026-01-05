@@ -2,11 +2,13 @@
 
 namespace App\Services;
 
+use App\Mail\UserCreatedMail;
 use App\Models\Contact;
 use App\Models\PortalInvitation;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 /**
@@ -222,5 +224,61 @@ class InvitationService
             'status' => PortalInvitation::STATUS_PENDING,
             'is_active' => true,
         ]);
+    }
+
+    /**
+     * Direkt kullanıcı oluştur (davetiye olmadan)
+     * Portal Admin tarafından kullanılır.
+     */
+    public function createUserDirectly(
+        string $email,
+        string $firstName,
+        string $lastName,
+        string $password,
+        User $createdBy,
+        string $roleName = 'Portal User',
+        ?string $ip = null
+    ): User {
+        // Zaten kayıtlı bir portal kullanıcısı var mı?
+        $existingUser = User::where('email', $email)
+            ->where('is_portal_user', true)
+            ->first();
+
+        if ($existingUser) {
+            throw new \Exception('Bu email adresi ile kayıtlı bir kullanıcı zaten mevcut.');
+        }
+
+        // Max kullanıcı limiti kontrolü
+        $maxUsers = config('portal.users.max_per_company', 10);
+        $currentUsers = User::where('company_id', $createdBy->company_id)
+            ->where('is_portal_user', true)
+            ->count();
+
+        if ($currentUsers >= $maxUsers) {
+            throw new \Exception("Maksimum kullanıcı limitine ({$maxUsers}) ulaşıldı.");
+        }
+
+        return DB::transaction(function () use ($email, $firstName, $lastName, $password, $createdBy, $roleName) {
+            // Portal kullanıcısı oluştur
+            $user = User::create([
+                'first_name' => $firstName,
+                'surname' => $lastName,
+                'email' => $email,
+                'password' => Hash::make($password),
+                'is_portal_user' => true,
+                'company_id' => $createdBy->company_id,
+                'is_company_admin' => $roleName === 'Portal Admin',
+                'is_active' => true,
+                'must_change_password' => true, // İlk girişte şifre değiştirmeyi zorla
+            ]);
+
+            // Rol ata
+            $user->assignRole($roleName);
+
+            // Hoş geldin emaili gönder
+            Mail::to($user->email)->send(new UserCreatedMail($user, $password));
+
+            return $user;
+        });
     }
 }

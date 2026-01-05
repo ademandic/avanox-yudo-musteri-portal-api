@@ -19,6 +19,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 
 class UserController extends Controller
 {
@@ -238,6 +239,85 @@ class UserController extends Controller
                     'email' => $invitation->email,
                     'expires_at' => $invitation->expires_at->toIso8601String(),
                 ],
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+    }
+
+    /**
+     * Direkt kullanıcı oluştur (davetiye olmadan)
+     * POST /api/users/create
+     */
+    public function create(Request $request): JsonResponse
+    {
+        $currentUser = Auth::guard('api')->user();
+
+        // Admin kontrolü
+        if (!$currentUser->is_company_admin) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bu işlem için yetkiniz bulunmuyor.',
+            ], 403);
+        }
+
+        // Validasyon
+        $validated = $request->validate([
+            'email' => [
+                'required',
+                'email',
+            ],
+            'first_name' => 'required|string|max:100',
+            'last_name' => 'required|string|max:100',
+            'password' => [
+                'required',
+                'string',
+                'confirmed',
+                Password::min(8)
+                    ->mixedCase()
+                    ->numbers()
+                    ->symbols(),
+            ],
+            'role' => 'nullable|string|in:Portal User,Portal Admin',
+        ], [
+            'email.required' => 'E-posta adresi gereklidir.',
+            'email.email' => 'Geçerli bir e-posta adresi girin.',
+            'first_name.required' => 'Ad gereklidir.',
+            'last_name.required' => 'Soyad gereklidir.',
+            'password.required' => 'Şifre gereklidir.',
+            'password.confirmed' => 'Şifre tekrarı eşleşmiyor.',
+            'password.min' => 'Şifre en az 8 karakter olmalıdır.',
+        ]);
+
+        // Email domain kontrolü (aynı domain olmalı)
+        $currentDomain = explode('@', $currentUser->email)[1] ?? '';
+        $newUserDomain = explode('@', $validated['email'])[1] ?? '';
+
+        if ($currentDomain !== $newUserDomain) {
+            return response()->json([
+                'success' => false,
+                'message' => "Sadece @{$currentDomain} uzantılı e-posta adreslerine kullanıcı oluşturabilirsiniz.",
+            ], 422);
+        }
+
+        try {
+            $user = $this->invitationService->createUserDirectly(
+                email: $validated['email'],
+                firstName: $validated['first_name'],
+                lastName: $validated['last_name'],
+                password: $validated['password'],
+                createdBy: $currentUser,
+                roleName: $validated['role'] ?? 'Portal User',
+                ip: $request->ip()
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Kullanıcı başarıyla oluşturuldu.',
+                'data' => new UserResource($user),
             ], 201);
         } catch (\Exception $e) {
             return response()->json([

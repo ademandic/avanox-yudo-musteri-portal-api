@@ -324,6 +324,7 @@ class PortalAuthService
             'company_id' => $user->company_id,
             'contact_id' => $user->contact_id,
             'is_company_admin' => $user->is_company_admin ?? false,
+            'must_change_password' => $user->must_change_password ?? false,
             'portal_theme' => $user->portal_theme ?? 'light',
             'portal_language' => $user->portal_language ?? 'tr',
             'company' => $user->company ? [

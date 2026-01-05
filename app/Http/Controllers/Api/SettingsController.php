@@ -16,6 +16,7 @@ use App\Services\PortalAuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 
 class SettingsController extends Controller
@@ -172,5 +173,49 @@ class SettingsController extends Controller
         };
 
         return response()->json($result, $statusCode);
+    }
+
+    /**
+     * Zorunlu şifre değiştir (ilk giriş)
+     * PUT /api/settings/force-change-password
+     */
+    public function forceChangePassword(Request $request): JsonResponse
+    {
+        $user = Auth::guard('api')->user();
+
+        // Sadece must_change_password true ise çalışır
+        if (!$user->must_change_password) {
+            return response()->json([
+                'success' => false,
+                'error' => 'not_required',
+                'message' => 'Şifre değişikliği gerekli değil.',
+            ], 400);
+        }
+
+        $validated = $request->validate([
+            'new_password' => [
+                'required',
+                'string',
+                'confirmed',
+                Password::min(8)
+                    ->mixedCase()
+                    ->numbers()
+                    ->symbols(),
+            ],
+        ], [
+            'new_password.required' => 'Yeni şifre gereklidir.',
+            'new_password.confirmed' => 'Şifre tekrarı eşleşmiyor.',
+            'new_password.min' => 'Şifre en az 8 karakter olmalıdır.',
+        ]);
+
+        $user->update([
+            'password' => Hash::make($validated['new_password']),
+            'must_change_password' => false,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Şifreniz başarıyla değiştirildi.',
+        ]);
     }
 }
