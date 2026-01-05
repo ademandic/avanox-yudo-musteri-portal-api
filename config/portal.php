@@ -24,6 +24,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | ERP Webhook Ayarları
+    |--------------------------------------------------------------------------
+    | Portal'dan ERP'ye bildirim göndermek için
+    */
+    'erp_webhook' => [
+        'base_url' => env('ERP_WEBHOOK_URL', 'https://erp.yudo.com.tr'),
+        'key' => env('ERP_WEBHOOK_KEY'),
+        'timeout' => env('ERP_WEBHOOK_TIMEOUT', 10),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | 2FA (İki Faktörlü Doğrulama) Ayarları
     |--------------------------------------------------------------------------
     */

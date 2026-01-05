@@ -16,6 +16,7 @@ use App\Models\PortalRequestState;
 use App\Models\PortalRequestStateLog;
 use App\Models\TechnicalData;
 use App\Models\TechnicalDataSystem;
+use App\Services\ErpWebhookService;
 use App\Services\FileStorageService;
 use App\Services\JobNumberService;
 use App\Services\RequestNumberService;
@@ -28,7 +29,8 @@ class RequestController extends Controller
     public function __construct(
         protected JobNumberService $jobNumberService,
         protected RequestNumberService $requestNumberService,
-        protected FileStorageService $fileStorageService
+        protected FileStorageService $fileStorageService,
+        protected ErpWebhookService $erpWebhookService
     ) {}
 
     /**
@@ -183,6 +185,24 @@ class RequestController extends Controller
 
                 return $portalRequest;
             });
+
+            // ERP'ye bildirim gönder (async - hata olsa bile talep oluşturulmuş olur)
+            try {
+                $this->erpWebhookService->notifyNewRequest([
+                    'job_id' => $result->job_id,
+                    'job_no' => $result->job->job_no,
+                    'request_number' => $result->request_no,
+                    'request_type' => $result->request_type,
+                    'company_id' => $result->company_id,
+                    'company_name' => $result->company->company_name ?? null,
+                    'portal_user' => $user->full_name,
+                ]);
+            } catch (\Exception $webhookError) {
+                \Log::warning('ERP webhook hatası (talep başarıyla oluşturuldu)', [
+                    'request_no' => $result->request_no,
+                    'error' => $webhookError->getMessage(),
+                ]);
+            }
 
             return response()->json([
                 'success' => true,
