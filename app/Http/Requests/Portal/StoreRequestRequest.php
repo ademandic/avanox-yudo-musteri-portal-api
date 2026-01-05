@@ -58,7 +58,7 @@ class StoreRequestRequest extends FormRequest
             'sistem_tipi' => ['nullable', 'string', 'in:open_end,valvegate'],
             'kontrol_cihazi_var_mi' => ['nullable', 'boolean'],
             'bolge_sayisi' => [$isControllerRequest ? 'required' : 'nullable', 'integer', 'min:1', 'max:96'],
-            'cihaz_tipi' => ['nullable', 'integer', 'in:1,2'],
+            'cihaz_tipi' => ['nullable', 'integer', 'in:108,109'],
             'soket_tipi' => ['nullable', 'integer'],
             'pim_baglanti_semasi' => ['nullable', 'integer'],
             'cihaz_kablo_uzunlugu' => ['nullable', 'numeric', 'min:0', 'max:99'],
