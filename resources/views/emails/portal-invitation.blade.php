@@ -104,15 +104,18 @@
     <div class="container">
         <div class="card">
             <div class="logo">
-                <h1>YUDO Portal</h1>
+                <svg height="32" viewBox="0 0 100 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M14.706 19.802v-7.849L23.543 0H16.26l-4.489 6.06L7.286 0H0l8.84 11.953v7.849h5.866zM25.049.017H31v13.016c0 .576.464 1.04 1.04 1.04h9.578c.577 0 1.041-.468 1.041-1.04V.017h5.949v14.996a4.79 4.79 0 0 1-4.789 4.789H29.841a4.79 4.79 0 0 1-4.793-4.789V.017zm25.565 0h18.771a4.79 4.79 0 0 1 4.79 4.793v10.203a4.79 4.79 0 0 1-4.79 4.789H50.614V.017zm5.896 5.9v7.989h10.773c.576 0 1.044-.468 1.044-1.041V6.958a1.04 1.04 0 0 0-1.044-1.04H56.51zM76.386 4.81A4.791 4.791 0 0 1 81.178.017h13.983a4.79 4.79 0 0 1 4.788 4.793v10.203a4.79 4.79 0 0 1-4.788 4.789H81.178a4.79 4.79 0 0 1-4.792-4.789V4.81zm5.878 2.2v5.806c0 .573.465 1.04 1.038 1.04h9.724c.577 0 1.041-.467 1.041-1.04V7.01a1.04 1.04 0 0 0-1.04-1.041h-9.725c-.573 0-1.038.464-1.038 1.04z" fill="#DC0043"/>
+                </svg>
+                <p style="margin: 10px 0 0 0; font-size: 14px; color: #64748b;">Müşteri Portalı</p>
             </div>
 
             <p class="welcome">Portal Davetiyesi</p>
 
             <p class="message">
                 Merhaba {{ $invitation->first_name }},<br><br>
-                YUDO Musteri Portali'na davet edildiniz. Bu portal uzerinden tasarim taleplerinizi olusturabilir,
-                is durumlarinizi takip edebilir ve tekliflerinizi goruntuleyebilirsiniz.
+                YUDO Müşteri Portalı'na davet edildiniz. Bu portal üzerinden tasarım taleplerinizi oluşturabilir,
+                iş durumlarınızı takip edebilir ve tekliflerinizi görüntüleyebilirsiniz.
             </p>
 
             <div class="button-container">
@@ -120,30 +123,30 @@
             </div>
 
             <div class="info">
-                <strong>Davetinizi kabul ettiginizde:</strong>
+                <strong>Davetinizi kabul ettiğinizde:</strong>
                 <ul style="margin: 8px 0 0 0; padding-left: 20px;">
-                    <li>Sifrenizi belirleyeceksiniz</li>
-                    <li>Hesabiniz hemen aktif olacak</li>
-                    <li>Portala giris yapabileceksiniz</li>
+                    <li>Şifrenizi belirleyeceksiniz</li>
+                    <li>Hesabınız hemen aktif olacak</li>
+                    <li>Portala giriş yapabileceksiniz</li>
                 </ul>
             </div>
 
             <div class="warning">
-                <strong>Onemli:</strong> Bu davetiye {{ $invitation->expires_at->format('d.m.Y H:i') }} tarihine kadar gecerlidir.
+                <strong>Önemli:</strong> Bu davetiye {{ $invitation->expires_at->format('d.m.Y H:i') }} tarihine kadar geçerlidir.
             </div>
 
             <p class="message">
-                Eger bu daveti siz talep etmediyseniz, bu emaili goz ardi edebilirsiniz.
+                Eğer bu daveti siz talep etmediyseniz, bu e-postayı göz ardı edebilirsiniz.
             </p>
 
             <p class="link-text">
-                Buton calismiyorsa, asagidaki linki tarayiciniza kopyalayabilirsiniz:<br>
+                Buton çalışmıyorsa, aşağıdaki linki tarayıcınıza kopyalayabilirsiniz:<br>
                 {{ $inviteUrl }}
             </p>
 
             <div class="footer">
-                <p>&copy; {{ date('Y') }} Yudo Sicak Yolluk Sistemleri</p>
-                <p>Bu otomatik bir e-postadir, lutfen yanitlamayin.</p>
+                <p>&copy; {{ date('Y') }} Yudo Sıcak Yolluk Sistemleri</p>
+                <p>Bu otomatik bir e-postadır, lütfen yanıtlamayın.</p>
             </div>
         </div>
     </div>

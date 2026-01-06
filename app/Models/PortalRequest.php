@@ -17,7 +17,7 @@ class PortalRequest extends Model
     // Talep tipleri
     const TYPE_DESIGN = 1;       // Tasarım Talebi
     const TYPE_OFFER = 2;        // Teklif Talebi
-    const TYPE_BOTH = 3;         // Tasarım + Teklif
+    const TYPE_BOTH = 3;         // Sıcak Yolluk Talebi
     const TYPE_CONTROLLER = 4;   // Kontrol Cihazı Talebi
     const TYPE_SPARE_PARTS = 5;  // Yedek Parça Talebi
 
@@ -188,7 +188,7 @@ class PortalRequest extends Model
     }
 
     /**
-     * Scope: Tasarım + Teklif talepleri
+     * Scope: Sıcak Yolluk talepleri
      */
     public function scopeBothRequests($query)
     {

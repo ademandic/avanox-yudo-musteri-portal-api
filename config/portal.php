@@ -60,7 +60,7 @@ return [
     */
     'session' => [
         // İnaktivite timeout süresi (dakika)
-        'timeout_minutes' => env('PORTAL_SESSION_TIMEOUT', 5),
+        'timeout_minutes' => env('PORTAL_SESSION_TIMEOUT', 60),
 
         // Tek oturum kontrolü
         'single_session' => env('PORTAL_SINGLE_SESSION', true),
@@ -126,9 +126,7 @@ return [
     |--------------------------------------------------------------------------
     */
     'request_types' => [
-        1 => 'Tasarım Talebi',
-        2 => 'Teklif Talebi',
-        3 => 'Tasarım + Teklif',
+        3 => 'Sıcak Yolluk Talebi',
         4 => 'Kontrol Cihazı Talebi',
         5 => 'Yedek Parça Talebi',
     ],

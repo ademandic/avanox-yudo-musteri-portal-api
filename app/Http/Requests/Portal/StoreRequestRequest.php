@@ -99,6 +99,7 @@ class StoreRequestRequest extends FormRequest
             'cihaz_kablo_uzunlugu' => ['nullable', 'numeric', 'min:0', 'max:99'],
             'yedek_parca_var_mi' => ['nullable', 'boolean'],
             'yedek_parca_detay' => [$isSparePartsRequest ? 'required' : 'nullable', 'string', 'max:2000'],
+            'related_yudo_id_no' => ['nullable', 'string', 'max:50'],
 
             // Dosya yükleme - extension bazlı kontrol (CAD dosyaları için MIME tanınmıyor)
             'files' => ['nullable', 'array', 'max:10'],

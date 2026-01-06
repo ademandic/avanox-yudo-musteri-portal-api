@@ -142,9 +142,20 @@ class InvitationService
 
         return DB::transaction(function () use ($invitation, $password, $ip) {
             // Portal kullanıcısı oluştur (users tablosunda)
+            $firstName = $invitation->contact?->first_name ?? $invitation->first_name ?? '';
+            $lastName = $invitation->contact?->surname ?? $invitation->last_name ?? '';
+            $fullName = trim($firstName . ' ' . $lastName);
+
+            // Turkce karakterleri ASCII'ye cevir
+            $name = strtr($fullName, [
+                'ş' => 's', 'Ş' => 'S', 'ı' => 'i', 'İ' => 'I', 'ğ' => 'g', 'Ğ' => 'G',
+                'ü' => 'u', 'Ü' => 'U', 'ö' => 'o', 'Ö' => 'O', 'ç' => 'c', 'Ç' => 'C'
+            ]);
+
             $user = User::create([
-                'first_name' => $invitation->contact?->first_name ?? $invitation->first_name,
-                'surname' => $invitation->contact?->surname ?? $invitation->last_name,
+                'name' => $name,
+                'first_name' => $firstName,
+                'surname' => $lastName,
                 'email' => $invitation->email,
                 'password' => Hash::make($password),
                 'is_portal_user' => true,
@@ -326,8 +337,16 @@ class InvitationService
         }
 
         return DB::transaction(function () use ($email, $firstName, $lastName, $password, $createdBy, $roleName) {
+            // Turkce karakterleri ASCII'ye cevir
+            $fullName = trim($firstName . ' ' . $lastName);
+            $name = strtr($fullName, [
+                'ş' => 's', 'Ş' => 'S', 'ı' => 'i', 'İ' => 'I', 'ğ' => 'g', 'Ğ' => 'G',
+                'ü' => 'u', 'Ü' => 'U', 'ö' => 'o', 'Ö' => 'O', 'ç' => 'c', 'Ç' => 'C'
+            ]);
+
             // Portal kullanıcısı oluştur
             $user = User::create([
+                'name' => $name,
                 'first_name' => $firstName,
                 'surname' => $lastName,
                 'email' => $email,

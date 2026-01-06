@@ -90,6 +90,7 @@ class RequestController extends Controller
                     'final_customer_id' => $user->company_id,
                     'final_customer_contact_id' => $contactId,
                     'final_customer_ref_no' => $request->customer_reference_code,
+                    'related_yudo_id_no' => $request->related_yudo_id_no,
                 ];
 
                 if ($company->is_molder == 1) {
