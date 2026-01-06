@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\JobResource;
 use App\Http\Resources\JobCollection;
+use App\Models\ErpFile;
 use App\Models\Job;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -64,7 +65,9 @@ class JobController extends Controller
         $job = Job::with([
             'technicalData',
             'files' => function ($query) {
-                $query->active()->orderBy('created_at', 'desc');
+                $query->whereIn('baglanti_tablo_adi', ErpFile::PORTAL_VISIBLE_TYPES)
+                    ->active()
+                    ->orderBy('created_at', 'desc');
             },
             'portalRequest.currentState',
             'portalRequest.portalUser',
@@ -102,7 +105,9 @@ class JobController extends Controller
                     ->orderBy('tarih_saat', 'desc');
             },
             'files' => function ($query) {
-                $query->active()->orderBy('created_at', 'desc');
+                $query->whereIn('baglanti_tablo_adi', ErpFile::PORTAL_VISIBLE_TYPES)
+                    ->active()
+                    ->orderBy('created_at', 'desc');
             },
             'stateLogs' => function ($query) {
                 $query->with('state')

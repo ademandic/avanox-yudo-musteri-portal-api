@@ -39,6 +39,7 @@ class FileController extends Controller
         }
 
         $files = ErpFile::where('job_id', $portalRequest->job_id)
+            ->whereIn('baglanti_tablo_adi', ErpFile::PORTAL_VISIBLE_TYPES)
             ->active()
             ->orderBy('created_at', 'desc')
             ->get();
@@ -133,7 +134,10 @@ class FileController extends Controller
     {
         $user = Auth::guard('api')->user();
 
-        $file = ErpFile::active()->find($id);
+        // Sadece whitelist'teki dosya türlerini göster
+        $file = ErpFile::whereIn('baglanti_tablo_adi', ErpFile::PORTAL_VISIBLE_TYPES)
+            ->active()
+            ->find($id);
 
         if (!$file) {
             return response()->json([

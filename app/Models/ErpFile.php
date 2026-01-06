@@ -14,6 +14,16 @@ class ErpFile extends Model
 {
     protected $table = 'files';
 
+    /**
+     * Portal müşterisinin görebileceği dosya türleri
+     * Whitelist: Sadece bu türdeki dosyalar portal'da görünür
+     */
+    const PORTAL_VISIBLE_TYPES = [
+        'technical_datas',      // Teknik veri dosyaları (portal uploads dahil)
+        'drawing_state_logs',   // Tasarım dosyaları
+        'portal_requests',      // Portal üzerinden yüklenen dosyalar
+    ];
+
     protected $fillable = [
         'job_id',
         'baglanti_id',
@@ -58,6 +68,14 @@ class ErpFile extends Model
     {
         return $query->where('baglanti_tablo_adi', $tableName)
                      ->where('baglanti_id', $id);
+    }
+
+    /**
+     * Scope: Portal'da görünür dosya türleri
+     */
+    public function scopePortalVisible($query)
+    {
+        return $query->whereIn('baglanti_tablo_adi', self::PORTAL_VISIBLE_TYPES);
     }
 
     /**
