@@ -27,7 +27,7 @@ class CheckSessionTimeout
 
     /**
      * Handle an incoming request.
-     * Session timeout (5 dk inaktivite) kontrolü yapar.
+     * Session timeout (60 dk inaktivite) kontrolü yapar.
      */
     public function handle(Request $request, Closure $next): Response
     {
