@@ -251,8 +251,9 @@ class InvitationService
     ): PortalInvitation {
         $config = config('portal.invitation');
 
-        // Aynı email için bekleyen davet var mı?
+        // Bu firmada aynı email için bekleyen davet var mı?
         $existingInvitation = PortalInvitation::where('email', $email)
+            ->where('company_id', $companyId)
             ->pending()
             ->first();
 
@@ -260,13 +261,28 @@ class InvitationService
             throw new \Exception('Bu email için zaten bekleyen bir davetiye mevcut.');
         }
 
-        // Zaten kayıtlı bir portal kullanıcısı var mı?
+        // Bu firmada zaten kayıtlı bir portal kullanıcısı var mı?
         $existingUser = User::where('email', $email)
+            ->where('company_id', $companyId)
             ->where('is_portal_user', true)
             ->first();
 
         if ($existingUser) {
             throw new \Exception('Bu email adresi ile kayıtlı bir kullanıcı zaten mevcut.');
+        }
+
+        // Firmada ilk kullanıcı mı? İlk kullanıcı otomatik admin olur
+        $existingUsersCount = User::where('company_id', $companyId)
+            ->where('is_portal_user', true)
+            ->count();
+
+        $acceptedInvitationsCount = PortalInvitation::where('company_id', $companyId)
+            ->where('status', PortalInvitation::STATUS_ACCEPTED)
+            ->count();
+
+        // Eğer firmada hiç kullanıcı ve kabul edilmiş davetiye yoksa, ilk kullanıcı admin olur
+        if ($existingUsersCount === 0 && $acceptedInvitationsCount === 0) {
+            $roleName = 'Portal Admin';
         }
 
         // Davetiye oluştur
