@@ -251,39 +251,26 @@ class InvitationService
     ): PortalInvitation {
         $config = config('portal.invitation');
 
-        // Bu firmada aynı email için bekleyen davet var mı?
-        $existingInvitation = PortalInvitation::where('email', $email)
-            ->where('company_id', $companyId)
+        // Bu firmada bekleyen davet var mı?
+        $existingInvitation = PortalInvitation::where('company_id', $companyId)
             ->pending()
             ->first();
 
         if ($existingInvitation && $existingInvitation->isValid()) {
-            throw new \Exception('Bu email için zaten bekleyen bir davetiye mevcut.');
+            throw new \Exception('Bu firma için zaten bekleyen bir davetiye mevcut.');
         }
 
         // Bu firmada zaten kayıtlı bir portal kullanıcısı var mı?
-        $existingUser = User::where('email', $email)
-            ->where('company_id', $companyId)
+        $existingUser = User::where('company_id', $companyId)
             ->where('is_portal_user', true)
             ->first();
 
         if ($existingUser) {
-            throw new \Exception('Bu email adresi ile kayıtlı bir kullanıcı zaten mevcut.');
+            throw new \Exception('Bu firma için zaten kayıtlı bir portal kullanıcısı mevcut.');
         }
 
-        // Firmada ilk kullanıcı mı? İlk kullanıcı otomatik admin olur
-        $existingUsersCount = User::where('company_id', $companyId)
-            ->where('is_portal_user', true)
-            ->count();
-
-        $acceptedInvitationsCount = PortalInvitation::where('company_id', $companyId)
-            ->where('status', PortalInvitation::STATUS_ACCEPTED)
-            ->count();
-
-        // Eğer firmada hiç kullanıcı ve kabul edilmiş davetiye yoksa, ilk kullanıcı admin olur
-        if ($existingUsersCount === 0 && $acceptedInvitationsCount === 0) {
-            $roleName = 'Portal Admin';
-        }
+        // Firmada ilk ve tek kullanıcı olacağı için otomatik admin olur
+        $roleName = 'Portal Admin';
 
         // Davetiye oluştur
         $invitation = PortalInvitation::create([
