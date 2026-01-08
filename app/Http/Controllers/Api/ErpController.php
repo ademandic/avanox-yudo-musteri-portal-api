@@ -85,19 +85,36 @@ class ErpController extends Controller
             'company_id' => 'required|integer',
         ]);
 
-        $users = \App\Models\User::where('company_id', $validated['company_id'])
+        $companyId = $validated['company_id'];
+
+        $users = \App\Models\User::where('company_id', $companyId)
             ->where('is_portal_user', true)
             ->get(['id', 'first_name', 'surname', 'email', 'is_company_admin', 'is_active', 'last_login_at']);
 
-        $pendingInvitations = \App\Models\PortalInvitation::where('company_id', $validated['company_id'])
+        $pendingInvitations = \App\Models\PortalInvitation::where('company_id', $companyId)
             ->pending()
             ->get(['id', 'email', 'first_name', 'last_name', 'expires_at']);
+
+        // ERP'den bu firmaya davetiye gönderilebilir mi?
+        // Hayır, eğer: ERP'den daha önce davetiye gönderilmişse (pending veya accepted) VEYA portal kullanıcısı varsa
+        $hasErpInvitation = \App\Models\PortalInvitation::where('company_id', $companyId)
+            ->where('invited_from_erp', true)
+            ->whereIn('status', [
+                \App\Models\PortalInvitation::STATUS_PENDING,
+                \App\Models\PortalInvitation::STATUS_ACCEPTED
+            ])
+            ->exists();
+
+        $hasPortalUser = $users->isNotEmpty();
+
+        $canInvite = !$hasErpInvitation && !$hasPortalUser;
 
         return response()->json([
             'success' => true,
             'data' => [
                 'users' => $users,
                 'pending_invitations' => $pendingInvitations,
+                'can_invite' => $canInvite,
             ],
         ]);
     }
