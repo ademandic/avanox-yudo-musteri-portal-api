@@ -37,6 +37,11 @@ class JobResource extends JsonResource
                     'kalip_y' => $td->kalip_y,
                     'kalip_d' => $td->kalip_d,
                     'kalip_e' => $td->kalip_e,
+                    'kalip_ct' => $td->kalip_ct,
+                    'kalip_st' => $td->kalip_st,
+                    'kalip_ht' => $td->kalip_ht,
+                    'kalip_en' => $td->kalip_en,
+                    'kalip_boy' => $td->kalip_boy,
                     'kalip_parca_sayisi' => $td->kalip_parca_sayisi,
                     'meme_sayisi' => $td->meme_sayisi,
                     'meme_sayisi_2' => $td->meme_sayisi_2,
@@ -49,7 +54,19 @@ class JobResource extends JsonResource
                     'parcada_konumu' => $td->parcada_konumu,
                     'parcada_konumu_2' => $td->parcada_konumu_2,
                     'double_injection' => (bool) $td->double_injection,
+                    'ikinci_enj_yandan_mi' => (bool) $td->ikinci_enj_yandan_mi,
+                    'blue_id_var_mi' => (bool) $td->blue_id_var_mi,
+                    'blue_id_nereye' => $td->blue_id_nereye,
+                    'renk_degisimi' => $td->renk_degisimi,
                     'parca_gorselligi' => $td->parca_gorselligi,
+                    // Kontrol Cihazı alanları
+                    'cihaz_tipi' => $td->cihaz_tipi,
+                    'cihaz_bolg_sayisi' => $td->cihaz_bolg_sayisi,
+                    'soket_tipi' => $td->soket_tipi,
+                    'pim_baglanti_semasi' => $td->pim_baglanti_semasi,
+                    'cihaz_kablo_uzunlugu' => $td->cihaz_kablo_uzunlugu,
+                    // Yedek Parça alanı
+                    'aciklama' => $td->aciklama,
                     // Drawing state logs (ERP)
                     'drawing_state_logs' => $td->relationLoaded('drawingStateLogs')
                         ? DrawingStateLogResource::collection($td->drawingStateLogs)
