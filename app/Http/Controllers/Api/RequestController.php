@@ -75,8 +75,8 @@ class RequestController extends Controller
 
                 // Job kategori belirleme
                 $jobCategoryId = match ((int) $request->request_type) {
-                    PortalRequest::TYPE_CONTROLLER => 2, // Controller Sales
-                    PortalRequest::TYPE_SPARE_PARTS => 3, // Spare Parts Sales
+                    PortalRequest::TYPE_CONTROLLER => 8, // Controller Sales
+                    PortalRequest::TYPE_SPARE_PARTS => 2, // Spare Parts Sales
                     default => 1, // System Sales
                 };
 
