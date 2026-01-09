@@ -561,6 +561,107 @@ class RequestController extends Controller
     }
 
     /**
+     * Hızlı düzenleme (10 dakika içinde)
+     * POST /api/requests/{id}/quick-update
+     */
+    public function quickUpdate(Request $request, int $id): JsonResponse
+    {
+        $user = Auth::guard('api')->user();
+
+        $portalRequest = PortalRequest::with(['job', 'technicalData'])
+            ->forCompany($user->company_id)
+            ->active()
+            ->find($id);
+
+        if (!$portalRequest) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Talep bulunamadı.',
+            ], 404);
+        }
+
+        // 10 dakikalık düzenleme penceresi kontrolü
+        if (!$portalRequest->isInQuickEditWindow()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Düzenleme süresi dolmuş. Talepler oluşturulduktan sonra sadece 10 dakika içinde düzenlenebilir.',
+            ], 403);
+        }
+
+        try {
+            $result = DB::transaction(function () use ($request, $portalRequest, $user) {
+                // Portal request güncelle
+                $portalRequest->update($request->only([
+                    'customer_reference_code',
+                    'customer_mold_code',
+                    'customer_notes',
+                ]));
+
+                // Job güncelle
+                if ($request->has('customer_reference_code')) {
+                    $portalRequest->job->update([
+                        'mold_maker_ref_no' => $request->customer_reference_code,
+                        'final_customer_ref_no' => $request->customer_reference_code,
+                    ]);
+                }
+
+                // Dosyalar varsa yükle
+                if ($request->hasFile('files')) {
+                    $job = $portalRequest->job;
+                    $technicalData = $portalRequest->technicalData;
+
+                    foreach ($request->file('files') as $file) {
+                        $fileInfo = $this->fileStorageService->store(
+                            $file,
+                            $job->job_no,
+                            $technicalData->id
+                        );
+
+                        ErpFile::create([
+                            'job_id' => $job->id,
+                            'baglanti_id' => $technicalData->id,
+                            'baglanti_tablo_adi' => 'technical_datas',
+                            'dosya_adi' => $fileInfo['original_name'],
+                            'dosya_yolu' => $fileInfo['relative_path'],
+                            'extension' => $fileInfo['extension'],
+                            'dosya_boyut' => $fileInfo['size'],
+                            'aciklama' => "Portal - Hızlı Düzenleme - Talep No: {$portalRequest->request_no}",
+                            'user_id' => null,
+                            'is_active' => 1,
+                        ]);
+                    }
+                }
+
+                return $portalRequest;
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Talep başarıyla güncellendi.',
+                'data' => new RequestResource($result->fresh([
+                    'job.files',
+                    'job.technicalData',
+                    'job.controllerTechnicalData',
+                    'job.sparePartsTechnicalData',
+                    'currentState'
+                ])),
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Hızlı düzenleme hatası', [
+                'request_id' => $id,
+                'message' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Talep güncellenirken bir hata oluştu.',
+                'error' => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
+        }
+    }
+
+    /**
      * Durum geçmişi
      * GET /api/requests/{id}/history
      */

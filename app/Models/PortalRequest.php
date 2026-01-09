@@ -140,6 +140,34 @@ class PortalRequest extends Model
     }
 
     /**
+     * Hızlı düzenleme süresi içinde mi? (10 dakika)
+     */
+    public function isInQuickEditWindow(): bool
+    {
+        // İptal edilmiş taleplerde düzenleme yapılamaz
+        if ($this->current_state_id === PortalRequestState::STATE_CANCELLED) {
+            return false;
+        }
+
+        // Oluşturulma zamanından itibaren 10 dakika içindeyse düzenlenebilir
+        $editWindowMinutes = config('portal.quick_edit_window_minutes', 10);
+        return $this->created_at->diffInMinutes(now()) < $editWindowMinutes;
+    }
+
+    /**
+     * Hızlı düzenleme için kalan süre (saniye)
+     */
+    public function getQuickEditRemainingSeconds(): int
+    {
+        $editWindowMinutes = config('portal.quick_edit_window_minutes', 10);
+        $elapsedSeconds = $this->created_at->diffInSeconds(now());
+        $totalSeconds = $editWindowMinutes * 60;
+        $remaining = $totalSeconds - $elapsedSeconds;
+
+        return max(0, $remaining);
+    }
+
+    /**
      * Scope: Sadece aktif talepler
      */
     public function scopeActive($query)

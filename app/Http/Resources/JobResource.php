@@ -124,6 +124,8 @@ class JobResource extends JsonResource
                     'priority_label' => $this->portalRequest->priority_label,
                     'is_editable' => $this->portalRequest->isEditable(),
                     'is_cancellable' => $this->portalRequest->isCancellable(),
+                    'is_in_quick_edit_window' => $this->portalRequest->isInQuickEditWindow(),
+                    'quick_edit_remaining_seconds' => $this->portalRequest->getQuickEditRemainingSeconds(),
                     'created_by' => $this->portalRequest->relationLoaded('portalUser') && $this->portalRequest->portalUser
                         ? [
                             'id' => $this->portalRequest->portalUser->id,

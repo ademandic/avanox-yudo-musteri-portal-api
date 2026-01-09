@@ -128,6 +128,7 @@ Route::middleware(['portal.api-key', 'portal.log'])->group(function () {
             Route::get('/{id}', [RequestController::class, 'show'])->where('id', '[0-9]+');
             Route::put('/{id}', [RequestController::class, 'update'])->where('id', '[0-9]+');
             Route::post('/{id}/cancel', [RequestController::class, 'cancel'])->where('id', '[0-9]+');
+            Route::post('/{id}/quick-update', [RequestController::class, 'quickUpdate'])->where('id', '[0-9]+');
             Route::get('/{id}/history', [RequestController::class, 'history'])->where('id', '[0-9]+');
 
             // Talep'e ait dosyalar
