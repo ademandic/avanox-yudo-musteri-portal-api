@@ -64,6 +64,8 @@ class JobController extends Controller
 
         $job = Job::with([
             'technicalData',
+            'controllerTechnicalData',
+            'sparePartsTechnicalData',
             'files' => function ($query) {
                 $query->whereIn('baglanti_tablo_adi', ErpFile::PORTAL_VISIBLE_TYPES)
                     ->active()
@@ -104,6 +106,8 @@ class JobController extends Controller
                     ->with('state')
                     ->orderBy('tarih_saat', 'desc');
             },
+            'controllerTechnicalData',
+            'sparePartsTechnicalData',
             'files' => function ($query) {
                 $query->whereIn('baglanti_tablo_adi', ErpFile::PORTAL_VISIBLE_TYPES)
                     ->active()

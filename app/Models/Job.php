@@ -88,6 +88,30 @@ class Job extends Model
     }
 
     /**
+     * Kontrol Cihazı teknik verileri
+     */
+    public function controllerTechnicalData(): HasOne
+    {
+        return $this->hasOne(TechnicalData::class)->where('teknik_data_tipi', 1);
+    }
+
+    /**
+     * Yedek Parça teknik verileri
+     */
+    public function sparePartsTechnicalData(): HasOne
+    {
+        return $this->hasOne(TechnicalData::class)->where('teknik_data_tipi', 2);
+    }
+
+    /**
+     * Tüm teknik veriler (tip'e bakılmaksızın ilk kayıt)
+     */
+    public function primaryTechnicalData(): HasOne
+    {
+        return $this->hasOne(TechnicalData::class)->orderBy('page', 'asc');
+    }
+
+    /**
      * İş'e bağlı dosyalar
      */
     public function files(): HasMany

@@ -21,10 +21,23 @@ class JobResource extends JsonResource
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
 
-            // Teknik veriler
-            'technical_data' => $this->whenLoaded('technicalData', function () {
-                $td = $this->technicalData;
-                return $td ? [
+            // Teknik veriler (request_type'a göre doğru kaynaktan)
+            'technical_data' => $this->when(
+                $this->relationLoaded('technicalData') ||
+                $this->relationLoaded('controllerTechnicalData') ||
+                $this->relationLoaded('sparePartsTechnicalData') ||
+                $this->relationLoaded('primaryTechnicalData'),
+                function () {
+                    // Request type'a göre doğru technical data'yı seç
+                    $requestType = $this->portalRequest?->request_type ?? null;
+
+                    $td = match ($requestType) {
+                        4 => $this->controllerTechnicalData ?? $this->primaryTechnicalData,
+                        5 => $this->sparePartsTechnicalData ?? $this->primaryTechnicalData,
+                        default => $this->technicalData ?? $this->primaryTechnicalData,
+                    };
+
+                    return $td ? [
                     'id' => $td->id,
                     'teknik_data_tipi' => $td->teknik_data_tipi,
                     'teknik_data_adi' => $td->teknik_data_adi,
