@@ -610,6 +610,10 @@ class RequestController extends Controller
                     $job = $portalRequest->job;
                     $technicalData = $portalRequest->technicalData;
 
+                    if (!$technicalData) {
+                        throw new \Exception('Teknik veri bulunamadı.');
+                    }
+
                     foreach ($request->file('files') as $file) {
                         $fileInfo = $this->fileStorageService->store(
                             $file,
@@ -651,12 +655,15 @@ class RequestController extends Controller
             \Log::error('Hızlı düzenleme hatası', [
                 'request_id' => $id,
                 'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Talep güncellenirken bir hata oluştu.',
-                'error' => config('app.debug') ? $e->getMessage() : null,
+                'message' => 'Talep güncellenirken bir hata oluştu: ' . $e->getMessage(),
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
