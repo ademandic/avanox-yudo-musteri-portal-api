@@ -195,7 +195,7 @@ class RequestController extends Controller
                     'request_number' => $result->request_no,
                     'request_type' => $result->request_type,
                     'company_id' => $result->company_id,
-                    'company_name' => $result->company->company_name ?? null,
+                    'company_name' => $result->company->name ?? null,
                     'portal_user' => $user->full_name,
                 ]);
             } catch (\Exception $webhookError) {
