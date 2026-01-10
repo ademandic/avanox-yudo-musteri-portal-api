@@ -84,7 +84,7 @@ class RequestController extends Controller
                 $jobData = [
                     'job_no' => $jobNo,
                     'job_category_id' => $jobCategoryId,
-                    'user_id' => $user->id,
+                    'user_id' => $company->sales_person_id ?? $user->id,
                     'aciklama' => "Portal üzerinden oluşturuldu.",
                     'is_active' => 2,
                     'source' => Job::SOURCE_PORTAL,
