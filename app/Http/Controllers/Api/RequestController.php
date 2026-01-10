@@ -581,11 +581,11 @@ class RequestController extends Controller
             ], 404);
         }
 
-        // 10 dakikalık düzenleme penceresi kontrolü
+        // Statü bazlı düzenleme kontrolü
         if (!$portalRequest->isInQuickEditWindow()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Düzenleme süresi dolmuş. Talepler oluşturulduktan sonra sadece 10 dakika içinde düzenlenebilir.',
+                'message' => 'Talep durumu değiştiği için artık düzenlenemez. Sadece "Talep Alındı" durumundaki talepler düzenlenebilir.',
             ], 403);
         }
 

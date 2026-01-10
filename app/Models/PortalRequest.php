@@ -140,31 +140,25 @@ class PortalRequest extends Model
     }
 
     /**
-     * Hızlı düzenleme süresi içinde mi? (10 dakika)
+     * Hızlı düzenleme yapılabilir mi?
+     * Sadece "Talep Alındı" durumundayken düzenlenebilir.
+     * Statü değiştiğinde (inceleniyor, çalışılıyor vb.) düzenleme kapanır.
      */
     public function isInQuickEditWindow(): bool
     {
-        // İptal edilmiş taleplerde düzenleme yapılamaz
-        if ($this->current_state_id === PortalRequestState::STATE_CANCELLED) {
-            return false;
-        }
-
-        // Oluşturulma zamanından itibaren 10 dakika içindeyse düzenlenebilir
-        $editWindowMinutes = config('portal.quick_edit_window_minutes', 10);
-        return $this->created_at->diffInMinutes(now()) < $editWindowMinutes;
+        // Sadece "Talep Alındı" durumundayken düzenlenebilir
+        return $this->current_state_id === PortalRequestState::STATE_RECEIVED;
     }
 
     /**
      * Hızlı düzenleme için kalan süre (saniye)
+     * Not: Artık süre bazlı değil, statü bazlı kontrol yapılıyor.
+     * Geriye dönük uyumluluk için metod korundu.
      */
     public function getQuickEditRemainingSeconds(): int
     {
-        $editWindowMinutes = config('portal.quick_edit_window_minutes', 10);
-        $elapsedSeconds = $this->created_at->diffInSeconds(now());
-        $totalSeconds = $editWindowMinutes * 60;
-        $remaining = $totalSeconds - $elapsedSeconds;
-
-        return max(0, $remaining);
+        // Statü bazlı kontrole geçildi, süre artık kullanılmıyor
+        return 0;
     }
 
     /**
