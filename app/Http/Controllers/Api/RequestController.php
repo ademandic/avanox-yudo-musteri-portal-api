@@ -68,6 +68,10 @@ class RequestController extends Controller
                 $jobNo = $this->jobNumberService->generate();
                 $company = $user->company;
 
+                if (!$company) {
+                    throw new \Exception('Kullanıcıya ait firma bilgisi bulunamadı.');
+                }
+
                 // Portal kullanıcısının email'i ile eşleşen contact'ı bul
                 $contact = \App\Models\Contact::where('company_id', $user->company_id)
                     ->where('email', $user->email)
@@ -663,8 +667,8 @@ class RequestController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Talep güncellenirken bir hata oluştu: ' . $e->getMessage(),
-                'error' => $e->getMessage(),
+                'message' => 'Talep güncellenirken bir hata oluştu.',
+                'error' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
     }

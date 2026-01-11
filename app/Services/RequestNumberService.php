@@ -13,30 +13,34 @@ class RequestNumberService
 {
     /**
      * Yeni request_no oluştur
+     * Race condition'ı önlemek için transaction ve lock kullanılır.
      */
     public function generate(): string
     {
-        $config = config('portal.request_number');
-        $year = date($config['year_format']); // 2025, 2026...
-        $prefix = "{$config['prefix']}-{$year}-";
-        $padding = $config['padding'];
+        return DB::transaction(function () {
+            $config = config('portal.request_number');
+            $year = date($config['year_format']); // 2025, 2026...
+            $prefix = "{$config['prefix']}-{$year}-";
+            $padding = $config['padding'];
 
-        // O yıla ait son numarayı bul
-        $lastRequest = DB::table('portal_requests')
-            ->where('request_no', 'LIKE', $prefix . '%')
-            ->orderByRaw("CAST(SUBSTRING(request_no, LEN(?) + 1, 10) AS INT) DESC", [$prefix])
-            ->first();
+            // O yıla ait son numarayı bul (lock ile)
+            $lastRequest = DB::table('portal_requests')
+                ->where('request_no', 'LIKE', $prefix . '%')
+                ->orderByRaw("CAST(SUBSTRING(request_no, LEN(?) + 1, 10) AS INT) DESC", [$prefix])
+                ->lockForUpdate()
+                ->first();
 
-        if ($lastRequest) {
-            // Mevcut numaradan devam et
-            $lastNumber = (int) str_replace($prefix, '', $lastRequest->request_no);
-            $newNumber = $lastNumber + 1;
-        } else {
-            // Yılın ilk talebi
-            $newNumber = 1;
-        }
+            if ($lastRequest) {
+                // Mevcut numaradan devam et
+                $lastNumber = (int) str_replace($prefix, '', $lastRequest->request_no);
+                $newNumber = $lastNumber + 1;
+            } else {
+                // Yılın ilk talebi
+                $newNumber = 1;
+            }
 
-        return $prefix . str_pad($newNumber, $padding, '0', STR_PAD_LEFT);
+            return $prefix . str_pad($newNumber, $padding, '0', STR_PAD_LEFT);
+        });
     }
 
     /**

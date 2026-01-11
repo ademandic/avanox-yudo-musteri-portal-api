@@ -67,6 +67,15 @@ class InvitationController extends Controller
             // Otomatik login
             $jwtToken = auth('api')->login($user);
 
+            // Session ID oluştur (tek oturum kontrolü için)
+            $sessionId = \Illuminate\Support\Str::uuid()->toString();
+            $user->update([
+                'last_login_at' => now(),
+                'last_login_ip' => $request->ip(),
+                'last_activity_at' => now(),
+                'current_session_id' => $sessionId,
+            ]);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Hesabınız başarıyla oluşturuldu.',
@@ -74,6 +83,7 @@ class InvitationController extends Controller
                     'access_token' => $jwtToken,
                     'token_type' => 'bearer',
                     'expires_in' => auth('api')->factory()->getTTL() * 60,
+                    'session_id' => $sessionId,
                     'user' => new UserResource($user->load('company')),
                 ],
             ], 201);
