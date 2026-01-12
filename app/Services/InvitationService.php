@@ -142,7 +142,7 @@ class InvitationService
 
         return DB::transaction(function () use ($invitation, $password, $ip) {
             // Portal kullanıcısı oluştur (users tablosunda)
-            $firstName = $invitation->contact?->first_name ?? $invitation->first_name ?? '';
+            $firstName = $invitation->contact?->name ?? $invitation->first_name ?? '';
             $lastName = $invitation->contact?->surname ?? $invitation->last_name ?? '';
             $fullName = trim($firstName . ' ' . $lastName);
 
